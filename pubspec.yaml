@@ -1,0 +1,22 @@
+name: nop_db_sqflite
+description: nop_db sqflite implemention
+version: 0.0.1
+homepage:
+publish_to: none
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  nop_db:
+    path: ../nop_db
+  sqflite: ^2.0.0+3
+  sqflite_common_ffi: ^2.0.0+3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^1.0.0
