@@ -17,6 +17,9 @@ const _sqfliteIsolateNopDb = '_sqflite_isolate_nop_db';
 /// 因为 sqflite 要与平台通信，只能在 main Isoalte 创建
 ///
 /// 目前实现为单例模式，一个数据库文件路径
+///
+/// 与[SqfliteDbIsolate]比较：调用的函数时一一对应的，`Messager`是默认实现，所以最重要的
+/// 是`Resolve`的覆盖实现（因为mixin`SqfliteEventMessager`所以不会由错误提示）
 class SqfliteMainIsolate extends SqfliteEventResolveMain
     with SqfliteEventMessager, SendEventPortMixin {
   NopDatabaseSqfliteImpl? _db;
@@ -31,7 +34,6 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
 
   static void initMainDb() {
     instance.init();
-    // return IsolateNameServer.registerPortWithName(rcPort.sendPort, _sqfliteNop);
   }
 
   void init() {
@@ -39,7 +41,6 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
     IsolateNameServer.removePortNameMapping(_sqfliteMainNopDb);
 
     final _rcPort = ReceivePort();
-    // IsolateNameServer.removePortNameMapping(_sqflite_main_nop_db);
     IsolateNameServer.registerPortWithName(_rcPort.sendPort, _sqfliteMainNopDb);
     rcPort = _rcPort;
     _rcPort.listen(_listen);
@@ -118,11 +119,11 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() {
     super.dispose();
     rcPort?.close();
     rcPort = null;
-    db.dispose();
+    return db.dispose();
   }
 }
 

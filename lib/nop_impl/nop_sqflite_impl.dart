@@ -31,6 +31,7 @@ abstract class NopDatabaseSqflite extends NopDatabase {
     if (useFfi) {
       return NopDatabaseSqfliteImpl(path);
     }
+    // 使用端口与主隔离通信
     return NopDatabaseSqfliteMain(path);
   }
 
