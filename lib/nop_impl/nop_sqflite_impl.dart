@@ -8,21 +8,22 @@ import 'sqflite_main_isolate.dart';
 
 abstract class NopDatabaseSqflite extends NopDatabase {
   NopDatabaseSqflite(String path) : super(path);
-
   @override
-  late final execute = innerQuery;
-
+  void execute(String sql, [List<Object?> paramters = const []]) =>
+      innerExecute(sql, paramters);
   @override
-  late final rawQuery = innerQuery;
-
+  FutureOr<List<Map<String, Object?>>> rawQuery(String sql,
+          [List<Object?> paramters = const []]) =>
+      innerQuery(sql, paramters);
   @override
-  late final rawDelete = innerDelete;
-
+  FutureOr<int> rawUpdate(String sql, [List<Object?> paramters = const []]) =>
+      innerUpdate(sql, paramters);
   @override
-  late final rawUpdate = innerUpdate;
-
+  FutureOr<int> rawDelete(String sql, [List<Object?> paramters = const []]) =>
+      innerDelete(sql, paramters);
   @override
-  late final rawInsert = innerInsert;
+  FutureOr<int> rawInsert(String sql, [List<Object?> paramters = const []]) =>
+      innerInsert(sql, paramters);
 
   factory NopDatabaseSqflite.create({
     required String path,
@@ -151,6 +152,12 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
   Future<void> dispose() {
     return db.close();
   }
+
+  @override
+  NopPrepare prepare(String sql,
+      {bool persistent = false, bool vtab = true, bool checkNoTail = false}) {
+    throw UnimplementedError('暂未支持sqflite');
+  }
 }
 
 class NopDatabaseSqfliteMain extends NopDatabaseSqflite {
@@ -211,5 +218,11 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite {
   @override
   void dispose() {
     dbMessager.dispose();
+  }
+
+  @override
+  NopPrepare prepare(String sql,
+      {bool persistent = false, bool vtab = true, bool checkNoTail = false}) {
+    throw UnimplementedError('暂未支持sqflite');
   }
 }
