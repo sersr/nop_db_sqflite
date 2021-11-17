@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:nop_db/database/nop.dart';
+import 'package:nop_db/database.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 

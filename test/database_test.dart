@@ -181,7 +181,7 @@ void main() async {
     // expect(t.go.length, 2, reason: t.go.toString() + table2q.go.toString());
     dashed;
 
-    final g = table2q.indexs_id.indexs_chapterName.go;
+    table2q.indexs_id.indexs_chapterName.go;
     // print(g.join('\n'));
     // expect(g.length, 8, reason: g.toString());
 

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 
-import 'package:nop_db/database/nop.dart';
 import 'package:nop_db/nop_db.dart';
 import 'package:utils/utils.dart';
 
@@ -125,6 +124,12 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
     rcPort = null;
     return db.dispose();
   }
+
+  @override
+  FutureOr<bool> onClose() {
+    dispose();
+    return true;
+  }
 }
 
 /// Isolate
@@ -224,5 +229,11 @@ class SqfliteDbIsolate extends SqfliteEventResolveMain
     super.dispose();
     rcPort?.close();
     rcPort = null;
+  }
+
+  @override
+  FutureOr<bool> onClose() {
+    dispose();
+    return true;
   }
 }

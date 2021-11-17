@@ -2,9 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:nop_annotations/nop_annotations.dart';
-import 'package:nop_db/database/nop.dart';
 import 'package:nop_db/nop_db.dart';
-import 'package:nop_db_sqflite/nop_impl/nop_sqflite_impl.dart';
+import 'package:nop_db_sqflite/nop_db_sqflite.dart';
 
 part 'nop_db_test_impl.g.dart';
 
