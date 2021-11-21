@@ -7,7 +7,7 @@ part 'sqflite_event.g.dart';
 
 @NopIsolateEvent()
 abstract class SqfliteEvent {
-  FutureOr<void> open(String path, int version);
+  FutureOr<void> sqfliteOpen(String path, int version);
   FutureOr<List<Map<String, Object?>>?> sqfliteQuery(
       String sql, List<Object?> parameters);
 
@@ -19,7 +19,7 @@ abstract class SqfliteEvent {
   FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters);
 
   /// another
-  FutureOr<void> onCreate(int version);
-  FutureOr<void> onUpgrade(int oVersion, int nVersion);
-  FutureOr<void> onDowngrade(int oVersion, int nVersion);
+  FutureOr<void> sqfliteOnCreate(int version);
+  FutureOr<void> sqfliteOnUpgrade(int oVersion, int nVersion);
+  FutureOr<void> sqfliteOnDowngrade(int oVersion, int nVersion);
 }

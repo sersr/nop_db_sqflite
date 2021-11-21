@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:isolate';
 
-import 'package:nop_db/database.dart';
+import 'package:nop_db/nop_db.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:utils/utils.dart';
 
+import 'sqflite_event.dart';
 import 'sqflite_main_isolate.dart';
 
 abstract class NopDatabaseSqflite extends NopDatabase {
@@ -149,7 +152,8 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
   }
 
   @override
-  Future<void> dispose() {
+  Future<void> disposeNop() {
+    Log.e('dispose', onlyDebug: false);
     return db.close();
   }
 
@@ -160,10 +164,17 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
   }
 }
 
-class NopDatabaseSqfliteMain extends NopDatabaseSqflite {
+/// 连接 main Isolate
+class NopDatabaseSqfliteMain extends NopDatabaseSqflite
+    with
+        SqfliteEvent,
+        Resolve,
+        SqfliteEventResolve,
+        SqfliteEventMessager,
+        SendEventMixin,
+        SendCacheMixin,
+        SendInitCloseMixin {
   NopDatabaseSqfliteMain(String path) : super(path);
-
-  late final SqfliteDbIsolate dbMessager = SqfliteDbIsolate.create(this);
 
   DatabaseOnCreate? _onCreate;
   DatabaseUpgrade? _onUpgrade;
@@ -181,44 +192,117 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite {
     _onCreate = onCreate;
     _onUpgrade = onUpgrade;
     _onDowngrade = onDowngrade;
-    dbMessager.init();
-    await dbMessager.open(path, version);
+    await init();
+    await sqfliteOpen(path, version);
     _onCreate = null;
     _onDowngrade = null;
     _onUpgrade = null;
   }
 
+  bool _state = false;
+  @override
+  bool get state => _state;
+  @override
+  FutureOr<void> initTask() async {
+    if (_state) return;
+    rcPort?.close();
+    _state = true;
+    final _receivePort = ReceivePort();
+    try {
+      sendPortGroup = SqfliteMainIsolate.getNopDatabaseSqfliteMainOwner(
+          _receivePort.sendPort);
+    } catch (e) {
+      Log.e(e, onlyDebug: false);
+    }
+    onResume();
+    rcPort = _receivePort;
+    _receivePort.listen(_listen);
+  }
+
+  ReceivePort? rcPort;
+  void _listen(message) {
+    if (add(message)) return;
+    if (resolve(message)) return;
+  }
+
+  /// messager
+  @override
+  Future<int> innerDelete(String sql,
+      [List<Object?> paramters = const []]) async {
+    final d = await sqfliteDelete(sql, paramters);
+    return d ?? 0;
+  }
+
+  @override
+  Future<int> innerInsert(String sql,
+      [List<Object?> paramters = const []]) async {
+    final i = await sqfliteInsert(sql, paramters);
+    return i ?? 0;
+  }
+
+  @override
+  Future<int> innerUpdate(String sql,
+      [List<Object?> paramters = const []]) async {
+    final u = await sqfliteUpdate(sql, paramters);
+    return u ?? 0;
+  }
+
+  @override
+  Future<void> innerExecute(String sql,
+      [List<Object?> paramters = const []]) async {
+    return sqfliteExecute(sql, paramters);
+  }
+
   @override
   Future<List<Map<String, Object?>>> innerQuery(String sql,
       [List<Object?> parameters = const []]) async {
-    final result = await dbMessager.innerQuery(sql, parameters);
-    return result;
+    final q = await sqfliteQuery(sql, parameters);
+    return q ?? const [];
   }
 
   @override
-  Future<int> innerUpdate(String sql, [List<Object?> paramters = const []]) {
-    return dbMessager.innerUpdate(sql, paramters);
+  SendEvent get sendEvent => this;
+
+  /// Resolve
+  @override
+  FutureOr<void> sqfliteOnCreate(int version) {
+    assert(onCreate != null);
+    assert(Log.w('Resolve: onCreate'));
+    return onCreate?.call(this, version);
   }
 
   @override
-  Future<int> innerInsert(String sql, [List<Object?> paramters = const []]) {
-    return dbMessager.innerInsert(sql, paramters);
+  FutureOr<void> sqfliteOnUpgrade(int oldVersion, int newVersion) {
+    return onUpgrade?.call(this, oldVersion, newVersion);
   }
 
   @override
-  Future<int> innerDelete(String sql, [List<Object?> paramters = const []]) {
-    return dbMessager.innerDelete(sql, paramters);
+  FutureOr<void> sqfliteOnDowngrade(int oldVersion, int newVersion) {
+    return onDowngrade?.call(this, oldVersion, newVersion);
   }
 
   @override
-  Future<void> innerExecute(String sql, [List<Object?> paramters = const []]) {
-    return dbMessager.innerExecute(sql, paramters);
-  }
+  FutureOr<void> disposeNop() => onClose();
 
   @override
   void dispose() {
-    dbMessager.dispose();
+    super.dispose();
+    rcPort?.close();
+    _state = false;
+    sendPortGroup = null;
+    rcPort = null;
+    assert(Log.i('dispose'));
   }
+
+  @override
+  FutureOr<bool> onClose() async {
+    assert(Log.i('onClose'));
+    await close();
+    return true;
+  }
+
+  @override
+  SendPortOwner? sendPortGroup;
 
   @override
   NopPrepare prepare(String sql,

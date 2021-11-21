@@ -6,22 +6,23 @@ part of 'nop_db_test_impl.dart';
 // Generator: GenNopGeneratorForAnnotation
 // **************************************************************************
 
+// ignore_for_file: curly_braces_in_flow_control_structures
 abstract class _GenBookDatabase extends $Database {
   late final _tables = <DatabaseTable>[myCache, indexs];
 
   @override
   List<DatabaseTable> get tables => _tables;
 
-  late final myCache = _GenMyCache(this);
-  late final indexs = _GenIndexs(this);
+  late final myCache = GenMyCache(this);
+  late final indexs = GenIndexs(this);
 }
 
 Map<String, dynamic> _MyCache_toJson(MyCache table) {
   return {'id': table.id, 'indexs': table.indexs, 'name': table.name};
 }
 
-class _GenMyCache extends DatabaseTable<MyCache, _GenMyCache> {
-  _GenMyCache($Database db) : super(db);
+class GenMyCache extends DatabaseTable<MyCache, GenMyCache> {
+  GenMyCache($Database db) : super(db);
 
   @override
   final table = 'MyCache';
@@ -30,7 +31,7 @@ class _GenMyCache extends DatabaseTable<MyCache, _GenMyCache> {
   final name = 'name';
 
   void updateMyCache(
-      UpdateStatement<MyCache, _GenMyCache> update, MyCache myCache) {
+      UpdateStatement<MyCache, GenMyCache> update, MyCache myCache) {
     if (myCache.id != null) update.id.set(myCache.id);
 
     if (myCache.indexs != null) update.indexs.set(myCache.indexs);
@@ -44,36 +45,36 @@ class _GenMyCache extends DatabaseTable<MyCache, _GenMyCache> {
         '$name TEXT)';
   }
 
-  MyCache _toTable(Map<String, dynamic> map) => MyCache(
+  static MyCache mapToTable(Map<String, dynamic> map) => MyCache(
       id: map['id'] as int?,
       indexs: map['indexs'] as int?,
       name: map['name'] as String?);
 
   @override
   List<MyCache> toTable(Iterable<Map<String, Object?>> query) =>
-      query.map((e) => _toTable(e)).toList();
+      query.map((e) => mapToTable(e)).toList();
 }
 
-extension ItemExtensionMyCache<T extends ItemExtension<_GenMyCache>> on T {
+extension ItemExtensionMyCache<T extends ItemExtension<GenMyCache>> on T {
   T get id => item(table.id) as T;
 
   T get indexs => item(table.indexs) as T;
 
   T get name => item(table.name) as T;
 
-  T get myCache_id => id;
+  T get genMyCache_id => id;
 
-  T get myCache_indexs => indexs;
+  T get genMyCache_indexs => indexs;
 
-  T get myCache_name => name;
+  T get genMyCache_name => name;
 }
 
-extension JoinItemMyCache<J extends JoinItem<_GenMyCache>> on J {
-  J get myCache_id => joinItem(joinTable.id) as J;
+extension JoinItemMyCache<J extends JoinItem<GenMyCache>> on J {
+  J get genMyCache_id => joinItem(joinTable.id) as J;
 
-  J get myCache_indexs => joinItem(joinTable.indexs) as J;
+  J get genMyCache_indexs => joinItem(joinTable.indexs) as J;
 
-  J get myCache_name => joinItem(joinTable.name) as J;
+  J get genMyCache_name => joinItem(joinTable.name) as J;
 }
 
 Map<String, dynamic> _Indexs_toJson(Indexs table) {
@@ -84,8 +85,8 @@ Map<String, dynamic> _Indexs_toJson(Indexs table) {
   };
 }
 
-class _GenIndexs extends DatabaseTable<Indexs, _GenIndexs> {
-  _GenIndexs($Database db) : super(db);
+class GenIndexs extends DatabaseTable<Indexs, GenIndexs> {
+  GenIndexs($Database db) : super(db);
 
   @override
   final table = 'Indexs';
@@ -93,7 +94,7 @@ class _GenIndexs extends DatabaseTable<Indexs, _GenIndexs> {
   final indexs = 'indexs';
   final chapterName = 'chapterName';
 
-  void updateIndexs(UpdateStatement<Indexs, _GenIndexs> update, Indexs indexs) {
+  void updateIndexs(UpdateStatement<Indexs, GenIndexs> update, Indexs indexs) {
     if (indexs.id != null) update.id.set(indexs.id);
 
     if (indexs.indexs != null) update.indexs.set(indexs.indexs);
@@ -107,34 +108,34 @@ class _GenIndexs extends DatabaseTable<Indexs, _GenIndexs> {
         '$chapterName TEXT)';
   }
 
-  Indexs _toTable(Map<String, dynamic> map) => Indexs(
+  static Indexs mapToTable(Map<String, dynamic> map) => Indexs(
       id: map['id'] as int?,
       indexs: map['indexs'] as int?,
       chapterName: map['chapterName'] as String?);
 
   @override
   List<Indexs> toTable(Iterable<Map<String, Object?>> query) =>
-      query.map((e) => _toTable(e)).toList();
+      query.map((e) => mapToTable(e)).toList();
 }
 
-extension ItemExtensionIndexs<T extends ItemExtension<_GenIndexs>> on T {
+extension ItemExtensionIndexs<T extends ItemExtension<GenIndexs>> on T {
   T get id => item(table.id) as T;
 
   T get indexs => item(table.indexs) as T;
 
   T get chapterName => item(table.chapterName) as T;
 
-  T get indexs_id => id;
+  T get genIndexs_id => id;
 
-  T get indexs_indexs => indexs;
+  T get genIndexs_indexs => indexs;
 
-  T get indexs_chapterName => chapterName;
+  T get genIndexs_chapterName => chapterName;
 }
 
-extension JoinItemIndexs<J extends JoinItem<_GenIndexs>> on J {
-  J get indexs_id => joinItem(joinTable.id) as J;
+extension JoinItemIndexs<J extends JoinItem<GenIndexs>> on J {
+  J get genIndexs_id => joinItem(joinTable.id) as J;
 
-  J get indexs_indexs => joinItem(joinTable.indexs) as J;
+  J get genIndexs_indexs => joinItem(joinTable.indexs) as J;
 
-  J get indexs_chapterName => joinItem(joinTable.chapterName) as J;
+  J get genIndexs_chapterName => joinItem(joinTable.chapterName) as J;
 }

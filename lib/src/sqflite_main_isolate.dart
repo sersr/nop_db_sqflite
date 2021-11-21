@@ -11,21 +11,33 @@ import 'sqflite_event.dart';
 const _sqfliteMainNopDb = '_sqflite_main_nop_db';
 const _sqfliteIsolateNopDb = '_sqflite_isolate_nop_db';
 
-/// 在 main Isolate 创建
-///
-/// 因为 sqflite 要与平台通信，只能在 main Isoalte 创建
-///
-/// 目前实现为单例模式，一个数据库文件路径
-///
-/// 与[SqfliteDbIsolate]比较：调用的函数时一一对应的，`Messager`是默认实现，所以最重要的
-/// 是`Resolve`的覆盖实现（因为mixin`SqfliteEventMessager`所以不会由错误提示）
+/// 由本地调用
 class SqfliteMainIsolate extends SqfliteEventResolveMain
-    with SqfliteEventMessager, SendEventPortMixin {
+    with SqfliteEventMessager, SendEventMixin, SendCacheMixin {
   NopDatabaseSqfliteImpl? _db;
-  NopDatabaseSqfliteImpl get db => _db!;
+  NopDatabaseSqfliteImpl? get db => _db;
   SqfliteMainIsolate();
-  @override
-  late SendEvent sendEvent = this;
+
+  /// 本地调用
+  static SendPort? get sqfliteMainIsolateSendPort =>
+      IsolateNameServer.lookupPortByName(_sqfliteIsolateNopDb);
+
+  /// 远程隔离调用
+  static SendPort? get nopDatabaseSqfliteMainSendPort =>
+      IsolateNameServer.lookupPortByName(_sqfliteMainNopDb);
+
+  /// 远程隔离调用
+  static SendPortOwner? getNopDatabaseSqfliteMainOwner(SendPort sendPort) {
+    IsolateNameServer.removePortNameMapping(_sqfliteIsolateNopDb);
+    IsolateNameServer.registerPortWithName(sendPort, _sqfliteIsolateNopDb);
+
+    final localSendPort = nopDatabaseSqfliteMainSendPort;
+    if (localSendPort != null) {
+      return SendPortOwner(
+          localSendPort: localSendPort, remoteSendPort: sendPort);
+    }
+  }
+
   static SqfliteMainIsolate? _instence;
   static SqfliteMainIsolate get instance {
     return _instence ??= SqfliteMainIsolate();
@@ -35,58 +47,73 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
     instance.init();
   }
 
+  @override
+  late SendEvent sendEvent = this;
+
+  /// 总是第一个调用的
   void init() {
     rcPort?.close();
-    IsolateNameServer.removePortNameMapping(_sqfliteMainNopDb);
-
     final _rcPort = ReceivePort();
+
+    IsolateNameServer.removePortNameMapping(_sqfliteMainNopDb);
     IsolateNameServer.registerPortWithName(_rcPort.sendPort, _sqfliteMainNopDb);
+
     rcPort = _rcPort;
     _rcPort.listen(_listen);
   }
 
   void _listen(message) {
-    if (resolve(message)) return;
+    if (add(message)) return; // 处理返回的消息/数据
+    if (resolve(message)) return; // 分发事件
   }
 
   ReceivePort? rcPort;
 
+  /// resolve : 处理消息
   @override
-  final sp = null;
-
-  /// resolve
-  @override
-  Future<int?> sqfliteDelete(String sql, List<Object?> paramters) {
-    return db.innerDelete(sql, paramters);
+  Future<int?> sqfliteDelete(String sql, List<Object?> paramters) async {
+    return db?.innerDelete(sql, paramters);
   }
 
   @override
-  FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) {
-    return db.innerExecute(sql, paramters);
+  FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) async {
+    return db?.innerExecute(sql, paramters);
   }
 
   @override
-  Future<int?> sqfliteInsert(String sql, List<Object?> paramters) {
-    return db.innerInsert(sql, paramters);
+  Future<int?> sqfliteInsert(String sql, List<Object?> paramters) async {
+    return db?.innerInsert(sql, paramters);
   }
 
   @override
   FutureOr<List<Map<String, Object?>>?> sqfliteQuery(
-      String sql, List<Object?> parameters) {
-    return db.innerQuery(sql, parameters);
+      String sql, List<Object?> parameters) async {
+    return db?.innerQuery(sql, parameters);
   }
 
   @override
-  Future<int?> sqfliteUpdate(String sql, List<Object?> paramters) {
-    return db.innerUpdate(sql, paramters);
+  Future<int?> sqfliteUpdate(String sql, List<Object?> paramters) async {
+    return db?.innerUpdate(sql, paramters);
   }
 
   @override
-  FutureOr<void> open(String path, int version) async {
-    Log.e('main: open sqflite3....', onlyDebug: false);
-    await _db?.dispose();
+  FutureOr<void> sqfliteOpen(String path, int version) async {
+    Log.e('main: open sqflite3...', onlyDebug: false);
+    try {
+      final sendPort = sqfliteMainIsolateSendPort;
+      if (sendPort != null) {
+        sendPortGroup = SendPortOwner(
+            localSendPort: sendPort, remoteSendPort: rcPort!.sendPort);
+      }
+    } catch (e) {
+      Log.w(e, onlyDebug: false);
+    }
+    onResume();
+    final oldDb = _db;
+    _db = null;
+    await oldDb?.disposeNop();
     _db = NopDatabaseSqfliteImpl(path);
-    return db.open(
+    return db!.open(
       version: version,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
@@ -95,145 +122,46 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
     );
   }
 
-  /// messager
+  /// --------------- resolve end -------------
+
+  @override
+  void onError(msg, error) {
+    Log.e(error, onlyDebug: false);
+  }
+
+  /// messager : 发送消息
   FutureOr<void> _onCreate(NopDatabase db, int version) {
     Log.w('messager: onCreate');
-    return onCreate(version);
+    return sqfliteOnCreate(version);
   }
 
   FutureOr<void> _onUpgrade(NopDatabase db, int oldVersin, int newVersion) {
-    return onUpgrade(oldVersin, newVersion);
+    return sqfliteOnUpgrade(oldVersin, newVersion);
   }
 
   FutureOr<void> _onDowngrade(NopDatabase db, int oldVersion, int newVersion) {
-    return onDowngrade(oldVersion, newVersion);
+    return sqfliteOnDowngrade(oldVersion, newVersion);
   }
 
-  late SendPort sendPort =
-      IsolateNameServer.lookupPortByName(_sqfliteIsolateNopDb)!;
+  /// ------------------ message end ----------------
 
   @override
-  void send(message) {
-    sendPort.send(message);
-  }
-
-  @override
-  Future<void> dispose() {
+  Future<void> dispose() async {
     super.dispose();
     rcPort?.close();
     rcPort = null;
-    return db.dispose();
+    sendPortGroup = null;
+    final old = db;
+    _db = null;
+    return old?.disposeNop();
   }
 
   @override
-  FutureOr<bool> onClose() {
-    dispose();
+  FutureOr<bool> onClose() async {
+    await dispose();
     return true;
   }
-}
-
-/// Isolate
-/// 由隔离开启端口
-class SqfliteDbIsolate extends SqfliteEventResolveMain
-    with SqfliteEventMessager, SendEventPortMixin {
-  // SqfliteDbIsolate(String path) : super(path);;
-  SqfliteDbIsolate._(this.db);
-
-  static SqfliteDbIsolate? _instance;
-  static SqfliteDbIsolate create(NopDatabaseSqfliteMain db) {
-    return _instance ??= SqfliteDbIsolate._(db);
-  }
-
-  void init() {
-    rcPort?.close();
-    IsolateNameServer.removePortNameMapping(_sqfliteIsolateNopDb);
-
-    final _receivePort = ReceivePort();
-    IsolateNameServer.registerPortWithName(
-        _receivePort.sendPort, _sqfliteIsolateNopDb);
-    rcPort = _receivePort;
-    _receivePort.listen(listen);
-  }
-
-  ReceivePort? rcPort;
-  void listen(message) {
-    if (resolve(message)) return;
-  }
-
-  /// messager
-  Future<int> innerDelete(String sql,
-      [List<Object?> paramters = const []]) async {
-    final d = await sqfliteDelete(sql, paramters);
-    return d ?? 0;
-  }
-
-  Future<int> innerInsert(String sql,
-      [List<Object?> paramters = const []]) async {
-    final i = await sqfliteInsert(sql, paramters);
-    return i ?? 0;
-  }
-
-  Future<int> innerUpdate(String sql,
-      [List<Object?> paramters = const []]) async {
-    final u = await sqfliteUpdate(sql, paramters);
-    return u ?? 0;
-  }
-
-  Future<void> innerExecute(String sql,
-      [List<Object?> paramters = const []]) async {
-    return sqfliteExecute(sql, paramters);
-  }
-
-  Future<List<Map<String, Object?>>> innerQuery(String sql,
-      [List<Object?> parameters = const []]) async {
-    final q = await sqfliteQuery(sql, parameters);
-    return q ?? const [];
-  }
 
   @override
-  SendEvent get sendEvent => this;
-
-  @override
-  void send(message) {
-    sendPort.send(message);
-  }
-
-  /// Resolve
-  @override
-  FutureOr<void> onCreate(int version) {
-    assert(db.onCreate != null);
-    Log.w('Resolve: onCreate');
-    return db.onCreate?.call(db, version);
-  }
-
-  @override
-  FutureOr<void> onUpgrade(int oldVersion, int newVersion) {
-    return db.onUpgrade?.call(db, oldVersion, newVersion);
-  }
-
-  @override
-  FutureOr<void> onDowngrade(int oldVersion, int newVersion) {
-    return db.onDowngrade?.call(db, oldVersion, newVersion);
-  }
-
-  late SendPort sendPort =
-      IsolateNameServer.lookupPortByName(_sqfliteMainNopDb)!;
-
-  final NopDatabaseSqfliteMain db;
-
-  @override
-  final sp = null;
-
-  @override
-  void dispose() {
-    super.dispose();
-    rcPort?.close();
-    rcPort = null;
-  }
-
-  @override
-  FutureOr<bool> onClose() {
-    dispose();
-    return true;
-  }
+  SendPortOwner? sendPortGroup;
 }

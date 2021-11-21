@@ -20,3 +20,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^1.0.0
+  build_runner: ^2.1.5
+  nop_db_gen:
+    path: ../nop_db_gen

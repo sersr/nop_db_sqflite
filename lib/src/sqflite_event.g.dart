@@ -6,16 +6,18 @@ part of 'sqflite_event.dart';
 // Generator: IsolateEventGeneratorForAnnotation
 // **************************************************************************
 
+// ignore_for_file: annotate_overrides
+
 enum SqfliteEventMessage {
-  open,
+  sqfliteOpen,
   sqfliteQuery,
   sqfliteUpdate,
   sqfliteInsert,
   sqfliteDelete,
   sqfliteExecute,
-  onCreate,
-  onUpgrade,
-  onDowngrade
+  sqfliteOnCreate,
+  sqfliteOnUpgrade,
+  sqfliteOnDowngrade
 }
 
 abstract class SqfliteEventResolveMain extends SqfliteEvent
@@ -33,22 +35,23 @@ abstract class SqfliteEventMessagerMain extends SqfliteEvent
 
 mixin SqfliteEventResolve on Resolve, SqfliteEvent {
   late final _sqfliteEventResolveFuncList = List<DynamicCallback>.unmodifiable([
-    _open_0,
+    _sqfliteOpen_0,
     _sqfliteQuery_1,
     _sqfliteUpdate_2,
     _sqfliteInsert_3,
     _sqfliteDelete_4,
     _sqfliteExecute_5,
-    _onCreate_6,
-    _onUpgrade_7,
-    _onDowngrade_8
+    _sqfliteOnCreate_6,
+    _sqfliteOnUpgrade_7,
+    _sqfliteOnDowngrade_8
   ]);
-
+  bool onSqfliteEventResolve(message) => false;
   @override
   bool resolve(resolveMessage) {
     if (resolveMessage is IsolateSendMessage) {
       final type = resolveMessage.type;
       if (type is SqfliteEventMessage) {
+        if (onSqfliteEventResolve(resolveMessage)) return true;
         dynamic result;
         try {
           result = _sqfliteEventResolveFuncList
@@ -63,63 +66,66 @@ mixin SqfliteEventResolve on Resolve, SqfliteEvent {
     return super.resolve(resolveMessage);
   }
 
-  FutureOr<void> _open_0(args) => open(args[0], args[1]);
+  FutureOr<void> _sqfliteOpen_0(args) => sqfliteOpen(args[0], args[1]);
   FutureOr<List<Map<String, Object?>>?> _sqfliteQuery_1(args) =>
       sqfliteQuery(args[0], args[1]);
   Future<int?> _sqfliteUpdate_2(args) => sqfliteUpdate(args[0], args[1]);
   Future<int?> _sqfliteInsert_3(args) => sqfliteInsert(args[0], args[1]);
   Future<int?> _sqfliteDelete_4(args) => sqfliteDelete(args[0], args[1]);
   FutureOr<void> _sqfliteExecute_5(args) => sqfliteExecute(args[0], args[1]);
-  FutureOr<void> _onCreate_6(args) => onCreate(args);
-  FutureOr<void> _onUpgrade_7(args) => onUpgrade(args[0], args[1]);
-  FutureOr<void> _onDowngrade_8(args) => onDowngrade(args[0], args[1]);
+  FutureOr<void> _sqfliteOnCreate_6(args) => sqfliteOnCreate(args);
+  FutureOr<void> _sqfliteOnUpgrade_7(args) =>
+      sqfliteOnUpgrade(args[0], args[1]);
+  FutureOr<void> _sqfliteOnDowngrade_8(args) =>
+      sqfliteOnDowngrade(args[0], args[1]);
 }
 
 /// implements [SqfliteEvent]
 mixin SqfliteEventMessager {
   SendEvent get sendEvent;
 
-  FutureOr<void> open(String path, int version) async {
-    return sendEvent.sendMessage(SqfliteEventMessage.open, [path, version]);
+  FutureOr<void> sqfliteOpen(String path, int version) {
+    return sendEvent
+        .sendMessage(SqfliteEventMessage.sqfliteOpen, [path, version]);
   }
 
   FutureOr<List<Map<String, Object?>>?> sqfliteQuery(
-      String sql, List<Object?> parameters) async {
+      String sql, List<Object?> parameters) {
     return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteQuery, [sql, parameters]);
   }
 
-  Future<int?> sqfliteUpdate(String sql, List<Object?> paramters) async {
+  Future<int?> sqfliteUpdate(String sql, List<Object?> paramters) {
     return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteUpdate, [sql, paramters]);
   }
 
-  Future<int?> sqfliteInsert(String sql, List<Object?> paramters) async {
+  Future<int?> sqfliteInsert(String sql, List<Object?> paramters) {
     return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteInsert, [sql, paramters]);
   }
 
-  Future<int?> sqfliteDelete(String sql, List<Object?> paramters) async {
+  Future<int?> sqfliteDelete(String sql, List<Object?> paramters) {
     return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteDelete, [sql, paramters]);
   }
 
-  FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) async {
+  FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) {
     return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteExecute, [sql, paramters]);
   }
 
-  FutureOr<void> onCreate(int version) async {
-    return sendEvent.sendMessage(SqfliteEventMessage.onCreate, version);
+  FutureOr<void> sqfliteOnCreate(int version) {
+    return sendEvent.sendMessage(SqfliteEventMessage.sqfliteOnCreate, version);
   }
 
-  FutureOr<void> onUpgrade(int oVersion, int nVersion) async {
-    return sendEvent
-        .sendMessage(SqfliteEventMessage.onUpgrade, [oVersion, nVersion]);
+  FutureOr<void> sqfliteOnUpgrade(int oVersion, int nVersion) {
+    return sendEvent.sendMessage(
+        SqfliteEventMessage.sqfliteOnUpgrade, [oVersion, nVersion]);
   }
 
-  FutureOr<void> onDowngrade(int oVersion, int nVersion) async {
-    return sendEvent
-        .sendMessage(SqfliteEventMessage.onDowngrade, [oVersion, nVersion]);
+  FutureOr<void> sqfliteOnDowngrade(int oVersion, int nVersion) {
+    return sendEvent.sendMessage(
+        SqfliteEventMessage.sqfliteOnDowngrade, [oVersion, nVersion]);
   }
 }
