@@ -153,7 +153,6 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
 
   @override
   Future<void> disposeNop() {
-    Log.e('dispose', onlyDebug: false);
     return db.close();
   }
 
@@ -222,7 +221,7 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   ReceivePort? rcPort;
   void _listen(message) {
     if (add(message)) return;
-    if (resolve(message)) return;
+    if (resolveAll(message)) return;
   }
 
   /// messager
@@ -296,8 +295,10 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
 
   @override
   FutureOr<bool> onClose() async {
-    assert(Log.i('onClose'));
+    assert(Log.i('onClose aaa'));
     await close();
+    assert(Log.i('onClose done xxxx'));
+
     return true;
   }
 
@@ -308,5 +309,11 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   NopPrepare prepare(String sql,
       {bool persistent = false, bool vtab = true, bool checkNoTail = false}) {
     throw UnimplementedError('暂未支持sqflite');
+  }
+
+  @override
+  FutureOr<void> onCloseStart() {
+    sendPortGroup = null;
+    // rcPort = null;
   }
 }

@@ -21,14 +21,7 @@ enum SqfliteEventMessage {
 }
 
 abstract class SqfliteEventResolveMain extends SqfliteEvent
-    with Resolve, SqfliteEventResolve {
-  @override
-  bool resolve(resolveMessage) {
-    if (remove(resolveMessage)) return true;
-    if (resolveMessage is! IsolateSendMessage) return false;
-    return super.resolve(resolveMessage);
-  }
-}
+    with Resolve, SqfliteEventResolve {}
 
 abstract class SqfliteEventMessagerMain extends SqfliteEvent
     with SqfliteEventMessager {}
@@ -51,9 +44,9 @@ mixin SqfliteEventResolve on Resolve, SqfliteEvent {
     if (resolveMessage is IsolateSendMessage) {
       final type = resolveMessage.type;
       if (type is SqfliteEventMessage) {
-        if (onSqfliteEventResolve(resolveMessage)) return true;
         dynamic result;
         try {
+          if (onSqfliteEventResolve(resolveMessage)) return true;
           result = _sqfliteEventResolveFuncList
               .elementAt(type.index)(resolveMessage.args);
           receipt(result, resolveMessage);

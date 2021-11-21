@@ -64,7 +64,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
 
   void _listen(message) {
     if (add(message)) return; // 处理返回的消息/数据
-    if (resolve(message)) return; // 分发事件
+    if (resolveAll(message)) return; // 分发事件
   }
 
   ReceivePort? rcPort;
@@ -153,6 +153,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
     sendPortGroup = null;
     final old = db;
     _db = null;
+    // Log.e('dispose Nop');
     return old?.disposeNop();
   }
 
