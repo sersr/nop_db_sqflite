@@ -76,49 +76,51 @@ mixin SqfliteEventResolve on Resolve, SqfliteEvent {
 /// implements [SqfliteEvent]
 mixin SqfliteEventMessager {
   SendEvent get sendEvent;
+  SendEvent get sqfliteEventSendEvent => sendEvent;
 
   FutureOr<void> sqfliteOpen(String path, int version) {
-    return sendEvent
+    return sqfliteEventSendEvent
         .sendMessage(SqfliteEventMessage.sqfliteOpen, [path, version]);
   }
 
   FutureOr<List<Map<String, Object?>>?> sqfliteQuery(
       String sql, List<Object?> parameters) {
-    return sendEvent
+    return sqfliteEventSendEvent
         .sendMessage(SqfliteEventMessage.sqfliteQuery, [sql, parameters]);
   }
 
   Future<int?> sqfliteUpdate(String sql, List<Object?> paramters) {
-    return sendEvent
+    return sqfliteEventSendEvent
         .sendMessage(SqfliteEventMessage.sqfliteUpdate, [sql, paramters]);
   }
 
   Future<int?> sqfliteInsert(String sql, List<Object?> paramters) {
-    return sendEvent
+    return sqfliteEventSendEvent
         .sendMessage(SqfliteEventMessage.sqfliteInsert, [sql, paramters]);
   }
 
   Future<int?> sqfliteDelete(String sql, List<Object?> paramters) {
-    return sendEvent
+    return sqfliteEventSendEvent
         .sendMessage(SqfliteEventMessage.sqfliteDelete, [sql, paramters]);
   }
 
   FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) {
-    return sendEvent
+    return sqfliteEventSendEvent
         .sendMessage(SqfliteEventMessage.sqfliteExecute, [sql, paramters]);
   }
 
   FutureOr<void> sqfliteOnCreate(int version) {
-    return sendEvent.sendMessage(SqfliteEventMessage.sqfliteOnCreate, version);
+    return sqfliteEventSendEvent.sendMessage(
+        SqfliteEventMessage.sqfliteOnCreate, version);
   }
 
   FutureOr<void> sqfliteOnUpgrade(int oVersion, int nVersion) {
-    return sendEvent.sendMessage(
+    return sqfliteEventSendEvent.sendMessage(
         SqfliteEventMessage.sqfliteOnUpgrade, [oVersion, nVersion]);
   }
 
   FutureOr<void> sqfliteOnDowngrade(int oVersion, int nVersion) {
-    return sendEvent.sendMessage(
+    return sqfliteEventSendEvent.sendMessage(
         SqfliteEventMessage.sqfliteOnDowngrade, [oVersion, nVersion]);
   }
 }
