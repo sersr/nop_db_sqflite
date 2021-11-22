@@ -1,12 +1,10 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'nop_db_test_impl.dart';
 
 void main() async {
 // ensureInitialized();
-  sqfliteFfiInit();
   final db = BookDatabase();
   db.test = true;
   await db.initDb();
@@ -15,8 +13,7 @@ void main() async {
   final genMyCacheTable = db.myCache;
   final indexsTable = db.indexs;
   test('database', () async {
-    final i =
-        genMyCacheTable.insert
+    final i = genMyCacheTable.insert
         .insertTable(MyCache(name: 'genMyCache', indexs: 9));
     print(i);
     i.go;

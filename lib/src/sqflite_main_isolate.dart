@@ -118,7 +118,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onDowngrade: _onDowngrade,
-      useFfi: false,
+      // useFfi: false,
     );
   }
 
@@ -153,7 +153,6 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
     sendPortGroup = null;
     final old = db;
     _db = null;
-    // Log.e('dispose Nop');
     return old?.disposeNop();
   }
 

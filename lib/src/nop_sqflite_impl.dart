@@ -3,7 +3,6 @@ import 'dart:isolate';
 
 import 'package:nop_db/nop_db.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:utils/utils.dart';
 
 import 'sqflite_event.dart';
@@ -28,13 +27,7 @@ abstract class NopDatabaseSqflite extends NopDatabase {
   FutureOr<int> rawInsert(String sql, [List<Object?> paramters = const []]) =>
       innerInsert(sql, paramters);
 
-  factory NopDatabaseSqflite.create({
-    required String path,
-    bool useFfi = false,
-  }) {
-    if (useFfi) {
-      return NopDatabaseSqfliteImpl(path);
-    }
+  factory NopDatabaseSqflite.create({required String path}) {
     // 使用端口与主隔离通信
     return NopDatabaseSqfliteMain(path);
   }
@@ -45,9 +38,8 @@ abstract class NopDatabaseSqflite extends NopDatabase {
     int version = 1,
     DatabaseUpgrade? onUpgrade,
     DatabaseUpgrade? onDowngrade,
-    bool useFfi = false,
   }) {
-    final db = NopDatabaseSqflite.create(path: path, useFfi: useFfi);
+    final db = NopDatabaseSqflite.create(path: path);
     return db
         .open(
           version: version,
@@ -88,7 +80,7 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
     int version = 1,
     DatabaseUpgrade? onUpgrade,
     DatabaseUpgrade? onDowngrade,
-    bool useFfi = true,
+    // bool useFfi = true,
   }) async {
     assert(version > 0);
     FutureOr<void> _onCreate(Database db, int version) {
@@ -106,22 +98,23 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
       return onDowngrade?.call(this, o, n);
     }
 
-    if (useFfi) {
-      sqfliteFfiInit();
-      db = await databaseFactoryFfi.openDatabase(path,
-          options: OpenDatabaseOptions(
-            version: version,
-            onCreate: _onCreate,
-            onUpgrade: _onUpdate,
-            onDowngrade: _onDown,
-          ));
-    } else {
-      db = await openDatabase(path,
-          version: version,
-          onCreate: _onCreate,
-          onUpgrade: _onUpdate,
-          onDowngrade: _onDown);
-    }
+    // '没有完整的生命周期，不能关闭Isolate
+    // if (useFfi) {
+    //   sqfliteFfiInit();
+    //   db = await databaseFactoryFfi.openDatabase(path,
+    //       options: OpenDatabaseOptions(
+    //         version: version,
+    //         onCreate: _onCreate,
+    //         onUpgrade: _onUpdate,
+    //         onDowngrade: _onDown,
+    //       ));
+    // } else {
+    db = await openDatabase(path,
+        version: version,
+        onCreate: _onCreate,
+        onUpgrade: _onUpdate,
+        onDowngrade: _onDown);
+    // }
   }
 
   @override
@@ -152,7 +145,8 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
   }
 
   @override
-  Future<void> disposeNop() {
+  Future<void> disposeNop() async {
+    Log.w('close...', onlyDebug: false);
     return db.close();
   }
 
@@ -290,15 +284,11 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     _state = false;
     sendPortGroup = null;
     rcPort = null;
-    assert(Log.i('dispose'));
   }
 
   @override
   FutureOr<bool> onClose() async {
-    assert(Log.i('onClose aaa'));
     await close();
-    assert(Log.i('onClose done xxxx'));
-
     return true;
   }
 

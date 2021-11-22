@@ -63,7 +63,7 @@ class BookDatabase extends _GenBookDatabase {
 
   Future<NopDatabase> _initSqfitedb() {
     return NopDatabaseSqflite.openSqfite(path,
-        version: version, onCreate: onCreate, useFfi: useFfi);
+        version: version, onCreate: onCreate);
   }
 
   int get version => 1;
