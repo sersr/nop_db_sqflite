@@ -289,7 +289,7 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   @override
   FutureOr<bool> onClose() async {
     await close();
-    return true;
+    return super.onClose();
   }
 
   @override
@@ -304,6 +304,8 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   @override
   FutureOr<void> onCloseStart() {
     sendPortGroup = null;
-    // rcPort = null;
   }
+
+  @override
+  SendPort get remoteSendPort => sendPortGroup!.localSendPort;
 }

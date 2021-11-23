@@ -1,3 +1,6 @@
+## 0.0.2
+* 同步 `nop_db`
+
 ## 0.0.1
 
-* TODO: Describe initial release.
+* 创建仓库

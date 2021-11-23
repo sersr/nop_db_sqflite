@@ -100,10 +100,10 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   FutureOr<void> sqfliteOpen(String path, int version) async {
     Log.e('main: open sqflite3...', onlyDebug: false);
     try {
-      final sendPort = sqfliteMainIsolateSendPort;
-      if (sendPort != null) {
+      final remoteSendPort = sqfliteMainIsolateSendPort;
+      if (remoteSendPort != null) {
         sendPortGroup = SendPortOwner(
-            localSendPort: sendPort, remoteSendPort: rcPort!.sendPort);
+            localSendPort: remoteSendPort, remoteSendPort: rcPort!.sendPort);
       }
     } catch (e) {
       Log.w(e, onlyDebug: false);
@@ -159,9 +159,12 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   @override
   FutureOr<bool> onClose() async {
     await dispose();
-    return true;
+    return super.onClose();
   }
 
   @override
   SendPortOwner? sendPortGroup;
+
+  @override
+  SendPort get remoteSendPort => sendPortGroup!.localSendPort;
 }
