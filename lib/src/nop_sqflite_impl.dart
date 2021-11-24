@@ -160,21 +160,18 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
 /// 连接 main Isolate
 class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     with
-        SqfliteEvent,
         Resolve,
+        ResolveMixin,
         SqfliteEventResolve,
         SqfliteEventMessager,
         SendEventMixin,
-        SendCacheMixin,
-        SendInitCloseMixin {
+        SendCacheMixin {
   NopDatabaseSqfliteMain(String path) : super(path);
 
   DatabaseOnCreate? _onCreate;
   DatabaseUpgrade? _onUpgrade;
   DatabaseUpgrade? _onDowngrade;
-  DatabaseOnCreate? get onCreate => _onCreate;
-  DatabaseUpgrade? get onUpgrade => _onUpgrade;
-  DatabaseUpgrade? get onDowngrade => _onDowngrade;
+  
   @override
   Future<void> open({
     required DatabaseOnCreate onCreate,
@@ -185,7 +182,7 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     _onCreate = onCreate;
     _onUpgrade = onUpgrade;
     _onDowngrade = onDowngrade;
-    await init();
+    await initTask();
     await sqfliteOpen(path, version);
     _onCreate = null;
     _onDowngrade = null;
@@ -193,29 +190,26 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   }
 
   bool _state = false;
-  @override
   bool get state => _state;
-  @override
+
   FutureOr<void> initTask() async {
     if (_state) return;
-    rcPort?.close();
     _state = true;
-    final _receivePort = ReceivePort();
-    try {
-      sendPortGroup = SqfliteMainIsolate.getNopDatabaseSqfliteMainOwner(
-          _receivePort.sendPort);
-    } catch (e) {
-      Log.e(e, onlyDebug: false);
-    }
+    await run();
     onResume();
-    rcPort = _receivePort;
-    _receivePort.listen(_listen);
   }
 
-  ReceivePort? rcPort;
-  void _listen(message) {
-    if (add(message)) return;
-    if (resolveAll(message)) return;
+  @override
+  bool listenResolve(message) {
+    if (add(message)) return true;
+    return super.listenResolve(message);
+  }
+
+  @override
+  void initStateResolve(void Function(FutureOr<void> work) add) {
+    sendPortOwner =
+        SqfliteMainIsolate.getNopDatabaseSqfliteMainOwner(localSendPort);
+    super.initStateResolve(add);
   }
 
   /// messager
@@ -254,58 +248,70 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   }
 
   @override
-  SendEvent get sendEvent => this;
+  NopPrepare prepare(String sql,
+      {bool persistent = false, bool vtab = true, bool checkNoTail = false}) {
+    throw UnimplementedError('暂未支持sqflite');
+  }
 
   /// Resolve
   @override
   FutureOr<void> sqfliteOnCreate(int version) {
-    assert(onCreate != null);
+    assert(_onCreate != null);
     assert(Log.w('Resolve: onCreate'));
-    return onCreate?.call(this, version);
+    return _onCreate?.call(this, version);
   }
 
   @override
   FutureOr<void> sqfliteOnUpgrade(int oldVersion, int newVersion) {
-    return onUpgrade?.call(this, oldVersion, newVersion);
+    return _onUpgrade?.call(this, oldVersion, newVersion);
   }
 
   @override
   FutureOr<void> sqfliteOnDowngrade(int oldVersion, int newVersion) {
-    return onDowngrade?.call(this, oldVersion, newVersion);
+    return _onDowngrade?.call(this, oldVersion, newVersion);
   }
 
   @override
   FutureOr<void> disposeNop() => onClose();
 
   @override
+  SendEvent get sendEvent => this;
+
+  @override
   void dispose() {
     super.dispose();
-    rcPort?.close();
     _state = false;
-    sendPortGroup = null;
-    rcPort = null;
+    sendPortOwner = null;
   }
 
   @override
   FutureOr<bool> onClose() async {
-    await close();
+    if (sendPortOwner != null) {
+      final rcPort = ReceivePort();
+
+      send(KeyController(rcPort.sendPort, KeyType.closeIsolate, null));
+      sendPortOwner = null;
+
+      final timer = Timer(
+          const Duration(milliseconds: 10000),
+          () => Log.w('如果一直卡在这里，有可能是远程`throw`没有被捕获，建议使用`runZonedGuarded`',
+              onlyDebug: false));
+
+      final result = await rcPort.first;
+      timer.cancel();
+      dispose();
+      Log.i('close: $result', onlyDebug: false);
+    }
     return super.onClose();
   }
 
-  @override
-  SendPortOwner? sendPortGroup;
+  SendPortOwner? sendPortOwner;
 
   @override
-  NopPrepare prepare(String sql,
-      {bool persistent = false, bool vtab = true, bool checkNoTail = false}) {
-    throw UnimplementedError('暂未支持sqflite');
+  SendPort? get remoteSendPort => sendPortOwner?.localSendPort;
+
+  @override
+  SendPortOwner? getSendPortOwner(key) {
+    return sendPortOwner;
   }
-
-  @override
-  FutureOr<void> onCloseStart() {
-    sendPortGroup = null;
-  }
-
-  @override
-  SendPort get remoteSendPort => sendPortGroup!.localSendPort;
 }

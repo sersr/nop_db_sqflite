@@ -26,7 +26,7 @@ abstract class SqfliteEventResolveMain extends SqfliteEvent
 abstract class SqfliteEventMessagerMain extends SqfliteEvent
     with SqfliteEventMessager {}
 
-mixin SqfliteEventResolve on Resolve, SqfliteEvent {
+mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
   late final _sqfliteEventResolveFuncList = List<DynamicCallback>.unmodifiable([
     _sqfliteOpen_0,
     _sqfliteQuery_1,
