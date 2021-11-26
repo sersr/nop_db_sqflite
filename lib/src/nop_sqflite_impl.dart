@@ -146,7 +146,7 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
 
   @override
   Future<void> disposeNop() async {
-    Log.w('close...', onlyDebug: false);
+    Log.w('close sqflite', onlyDebug: false);
     return db.close();
   }
 
