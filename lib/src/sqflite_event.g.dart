@@ -21,10 +21,10 @@ enum SqfliteEventMessage {
 }
 
 abstract class SqfliteEventResolveMain extends SqfliteEvent
-    with Resolve, SqfliteEventResolve {}
+    with ListenMixin, Resolve, SqfliteEventResolve {}
 
 abstract class SqfliteEventMessagerMain extends SqfliteEvent
-    with SqfliteEventMessager {}
+    with SendEvent, SqfliteEventMessager {}
 
 mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
   late final _sqfliteEventResolveFuncList = List<DynamicCallback>.unmodifiable([
@@ -74,53 +74,55 @@ mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
 }
 
 /// implements [SqfliteEvent]
-mixin SqfliteEventMessager {
+mixin SqfliteEventMessager on SendEvent {
   SendEvent get sendEvent;
-  SendEvent get sqfliteEventSendEvent => sendEvent;
+  Iterable<Type> getProtocols(String name) sync* {
+    if (name == 'sqfliteEventDefault') yield SqfliteEventMessage;
+    yield* super.getProtocols(name);
+  }
 
   FutureOr<void> sqfliteOpen(String path, int version) {
-    return sqfliteEventSendEvent
+    return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteOpen, [path, version]);
   }
 
   FutureOr<List<Map<String, Object?>>?> sqfliteQuery(
       String sql, List<Object?> parameters) {
-    return sqfliteEventSendEvent
+    return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteQuery, [sql, parameters]);
   }
 
   Future<int?> sqfliteUpdate(String sql, List<Object?> paramters) {
-    return sqfliteEventSendEvent
+    return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteUpdate, [sql, paramters]);
   }
 
   Future<int?> sqfliteInsert(String sql, List<Object?> paramters) {
-    return sqfliteEventSendEvent
+    return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteInsert, [sql, paramters]);
   }
 
   Future<int?> sqfliteDelete(String sql, List<Object?> paramters) {
-    return sqfliteEventSendEvent
+    return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteDelete, [sql, paramters]);
   }
 
   FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) {
-    return sqfliteEventSendEvent
+    return sendEvent
         .sendMessage(SqfliteEventMessage.sqfliteExecute, [sql, paramters]);
   }
 
   FutureOr<void> sqfliteOnCreate(int version) {
-    return sqfliteEventSendEvent.sendMessage(
-        SqfliteEventMessage.sqfliteOnCreate, version);
+    return sendEvent.sendMessage(SqfliteEventMessage.sqfliteOnCreate, version);
   }
 
   FutureOr<void> sqfliteOnUpgrade(int oVersion, int nVersion) {
-    return sqfliteEventSendEvent.sendMessage(
+    return sendEvent.sendMessage(
         SqfliteEventMessage.sqfliteOnUpgrade, [oVersion, nVersion]);
   }
 
   FutureOr<void> sqfliteOnDowngrade(int oVersion, int nVersion) {
-    return sqfliteEventSendEvent.sendMessage(
+    return sendEvent.sendMessage(
         SqfliteEventMessage.sqfliteOnDowngrade, [oVersion, nVersion]);
   }
 }
