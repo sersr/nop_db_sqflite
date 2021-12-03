@@ -224,7 +224,7 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     if (sendPortOwner != null) {
       final rcPort = ReceivePort();
 
-      send(KeyController(rcPort.sendPort, KeyType.closeIsolate, null));
+      send(KeyController(rcPort.sendPort, KeyType.closeServer, null));
       sendPortOwner = null;
 
       final timer = Timer(
