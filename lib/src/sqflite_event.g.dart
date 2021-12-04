@@ -27,7 +27,7 @@ abstract class SqfliteEventMessagerMain extends SqfliteEvent
     with SendEvent, SqfliteEventMessager {}
 
 mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
-  late final _sqfliteEventResolveFuncList = List<DynamicCallback>.unmodifiable([
+  late final _sqfliteEventResolveFuncList = List<Function>.unmodifiable([
     _sqfliteOpen_0,
     _sqfliteQuery_1,
     _sqfliteUpdate_2,
@@ -38,6 +38,11 @@ mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
     _sqfliteOnUpgrade_7,
     _sqfliteOnDowngrade_8
   ]);
+  Iterable<MapEntry<String, Type>> getResolveProtocols() sync* {
+    yield const MapEntry('sqfliteEventDefault', SqfliteEventMessage);
+    yield* super.getResolveProtocols();
+  }
+
   bool onSqfliteEventResolve(message) => false;
   @override
   bool resolve(resolveMessage) {
@@ -77,9 +82,9 @@ mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
 mixin SqfliteEventMessager on SendEvent {
   SendEvent get sendEvent;
   String get sqfliteEventDefault => 'sqfliteEventDefault';
-  Iterable<Type> getProtocols(String name) sync* {
-    if (name == sqfliteEventDefault) yield SqfliteEventMessage;
-    yield* super.getProtocols(name);
+  Iterable<MapEntry<String, Type>> getProtocols() sync* {
+    yield MapEntry(sqfliteEventDefault, SqfliteEventMessage);
+    yield* super.getProtocols();
   }
 
   FutureOr<void> sqfliteOpen(String path, int version) {
@@ -146,29 +151,5 @@ mixin MultiSqfliteEventDefaultMessagerMixin
     yield MapEntry(
         'sqfliteEventDefault', createRemoteServerSqfliteEventDefault);
     yield* super.createRemoteServerIterable();
-  }
-
-  Iterable<MapEntry<String, List<Type>>> allProtocolsItreable() sync* {
-    yield const MapEntry('sqfliteEventDefault', [SqfliteEventMessage]);
-    yield* super.allProtocolsItreable();
-  }
-}
-
-abstract class MultiSqfliteEventDefaultResolveMain
-    with
-        ListenMixin,
-        Resolve,
-        MultiSqfliteEventDefaultMixin,
-        SqfliteEventResolve {}
-
-mixin MultiSqfliteEventDefaultMixin on Resolve {
-  void onResumeListen() {
-    if (remoteSendPort != null)
-      remoteSendPort!.send(SendPortName(
-        'sqfliteEventDefault',
-        localSendPort,
-        protocols: [SqfliteEventMessage],
-      ));
-    super.onResumeListen();
   }
 }

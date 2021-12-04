@@ -14,6 +14,7 @@ const _sqfliteIsolateNopDb = '_sqflite_isolate_nop_db';
 /// 由本地调用
 class SqfliteMainIsolate extends SqfliteEventResolveMain
     with
+        SendEvent,
         SendEventMixin,
         SendCacheMixin,
         SendInitCloseMixin,
@@ -100,7 +101,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
 
   @override
   SendPortOwner? getSendPortOwner(key) {
-    return sendPortOwner;
+    return sendPortOwner ?? super.getSendPortOwner(key);
   }
 
   /// messager : 发送消息

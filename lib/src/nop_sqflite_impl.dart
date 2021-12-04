@@ -160,6 +160,7 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
 /// 连接 main Isolate
 class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     with
+        SendEvent,
         ListenMixin,
         Resolve,
         SendEventMixin,
@@ -247,7 +248,7 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
 
   @override
   SendPortOwner? getSendPortOwner(key) {
-    return sendPortOwner;
+    return sendPortOwner ?? super.getSendPortOwner(key);
   }
 
   /// messager
