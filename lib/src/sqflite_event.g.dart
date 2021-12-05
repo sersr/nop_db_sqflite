@@ -153,3 +153,11 @@ mixin MultiSqfliteEventDefaultMessagerMixin
     yield* super.createRemoteServerIterable();
   }
 }
+
+abstract class MultiSqfliteEventDefaultResolveMain
+    with
+        SendEvent,
+        ListenMixin,
+        Resolve,
+        ResolveMultiRecievedMixin,
+        SqfliteEventResolve {}

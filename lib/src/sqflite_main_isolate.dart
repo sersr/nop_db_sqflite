@@ -9,7 +9,6 @@ import './nop_sqflite_impl.dart';
 import 'sqflite_event.dart';
 
 const _sqfliteMainNopDb = '_sqflite_main_nop_db';
-const _sqfliteIsolateNopDb = '_sqflite_isolate_nop_db';
 
 /// 由本地调用
 class SqfliteMainIsolate extends SqfliteEventResolveMain
@@ -18,54 +17,47 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
         SendEventMixin,
         SendCacheMixin,
         SendInitCloseMixin,
-        SqfliteEventMessager {
+        SqfliteEventMessager,
+        ResolveMultiRecievedMixin // 需要接收[SendPortName]
+{
   SqfliteMainIsolate();
 
   NopDatabaseSqfliteImpl? _db;
   NopDatabaseSqfliteImpl? get db => _db;
 
-  /// 本地调用
-  static SendPort? get sqfliteMainIsolateSendPort =>
-      IsolateNameServer.lookupPortByName(_sqfliteIsolateNopDb);
-
+  /// 注册端口
   /// 远程隔离调用
   static SendPort? get nopDatabaseSqfliteMainSendPort =>
       IsolateNameServer.lookupPortByName(_sqfliteMainNopDb);
 
-  /// 远程隔离调用
-  static SendPortOwner? getNopDatabaseSqfliteMainOwner(SendPort sendPort) {
-    IsolateNameServer.removePortNameMapping(_sqfliteIsolateNopDb);
-    IsolateNameServer.registerPortWithName(sendPort, _sqfliteIsolateNopDb);
-
-    final localSendPort = nopDatabaseSqfliteMainSendPort;
-    if (localSendPort != null) {
-      return SendPortOwner(
-          localSendPort: localSendPort, remoteSendPort: sendPort);
-    }
-  }
-
   static SqfliteMainIsolate? _instence;
-  static SqfliteMainIsolate get instance {
+  static SqfliteMainIsolate get _privateInstance {
     return _instence ??= SqfliteMainIsolate();
   }
 
-  static Future<void> initMainDb() async => instance.init();
-  @override
-  FutureOr<void> initTask() => run();
-  @override
-  FutureOr<void> closeTask() => onClose();
+  /// 提供单一实例
+  /// 只提供初始化接口
+  static Future<void> initMainDb() async => _privateInstance.init();
+
+  // 添加条件判定
+  bool _state = false;
 
   @override
-  void initStateListen(void Function(FutureOr<void> work) add) {
-    IsolateNameServer.removePortNameMapping(_sqfliteMainNopDb);
-    IsolateNameServer.registerPortWithName(localSendPort, _sqfliteMainNopDb);
-    super.initStateListen(add);
+  FutureOr<void> initTask() async {
+    if (_state || sendPortOwners.isNotEmpty) return;
+    _state = true;
+    return run();
   }
 
+  /// 权能转移到[onClose]
   @override
-  bool listen(message) {
-    if (add(message)) return true;
-    return super.listen(message);
+  FutureOr<void> closeTask() => throw UnimplementedError('unimplemented');
+
+  @override
+  FutureOr<void> onInitStart() {
+    IsolateNameServer.removePortNameMapping(_sqfliteMainNopDb);
+    IsolateNameServer.registerPortWithName(localSendPort, _sqfliteMainNopDb);
+    return super.onInitStart();
   }
 
   @override
@@ -74,34 +66,28 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   }
 
   @override
-  Future<void> dispose() async {
-    super.dispose();
-    sendPortOwner = null;
+  FutureOr<bool> onClose() async {
     final old = db;
     _db = null;
-    return old?.disposeNop();
-  }
-
-  @override
-  FutureOr<bool> onClose() async {
-    await dispose();
+    remoteSendPort = null;
+    _state = false;
+    dispose();
+    await old?.disposeNop();
     return super.onClose();
   }
 
-  SendPortOwner? sendPortOwner;
-
   @override
-  SendPort? get remoteSendPort => sendPortOwner?.localSendPort;
+  SendPort? remoteSendPort;
 
+  /// 从远程接收[SendPortName]
+  /// [remoteSendPort]可用
+  /// 远程还在等待一个[SendPortName]
+  /// 调用[onResumeListen]
   @override
-  void onResumeListen() {
-    onResume();
-    super.onResumeListen();
-  }
-
-  @override
-  SendPortOwner? getSendPortOwner(key) {
-    return sendPortOwner ?? super.getSendPortOwner(key);
+  void onResume() {
+    super.onResume();
+    remoteSendPort = getSendPortOwner(sqfliteEventDefault)?.localSendPort;
+    onResumeListen();
   }
 
   /// messager : 发送消息
@@ -150,17 +136,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   @override
   FutureOr<void> sqfliteOpen(String path, int version) async {
     Log.e('main: open sqflite3', onlyDebug: false);
-    try {
-      final remoteSendPort = sqfliteMainIsolateSendPort;
-      if (remoteSendPort != null) {
-        sendPortOwner = SendPortOwner(
-            localSendPort: remoteSendPort, remoteSendPort: localSendPort);
-        onResumeListen();
-      }
-    } catch (e) {
-      Log.w(e, onlyDebug: false);
-    }
-
+    assert(remoteSendPort != null);
     final oldDb = _db;
     _db = null;
     await oldDb?.disposeNop();
@@ -170,10 +146,6 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onDowngrade: _onDowngrade,
-      // useFfi: false,
     );
   }
-
-  /// --------------- resolve end -------------
-
 }

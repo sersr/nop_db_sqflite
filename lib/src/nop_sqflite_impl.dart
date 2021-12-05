@@ -163,11 +163,14 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
         SendEvent,
         ListenMixin,
         Resolve,
+        SendEventResolve,
         SendEventMixin,
         SendCacheMixin,
         SendInitCloseMixin,
         SqfliteEventResolve,
-        SqfliteEventMessager {
+        SqfliteEventMessager,
+        SendMultiServerMixin,
+        MultiSqfliteEventDefaultMessagerMixin {
   NopDatabaseSqfliteMain(String path) : super(path);
 
   DatabaseOnCreate? _onCreate;
@@ -191,65 +194,29 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     _onUpgrade = null;
   }
 
-  bool _state = false;
-  bool get state => _state;
-
+  // 本地(相对)调用
   @override
-  FutureOr<void> initTask() async {
-    if (_state) return;
-    _state = true;
-    await run();
-  }
+  FutureOr<void> disposeNop() => close();
 
+  /// 不使用[Resolve]的[onResumeListen]实现
   @override
-  void onResumeListen() {
-    onResume();
-    super.onResumeListen();
-  }
-
-  @override
-  FutureOr<void> disposeNop() => closeTask();
-
-  @override
-  FutureOr<void> closeTask() => onClose();
-
-  @override
-  void initStateListen(void Function(FutureOr<void> work) add) {
-    sendPortOwner =
-        SqfliteMainIsolate.getNopDatabaseSqfliteMainOwner(localSendPort);
-    super.initStateListen(add);
+  Future<RemoteServer> createRemoteServerSqfliteEventDefault() async {
+    /// 主隔离端口已经开启了，只需向端口发送[SendPortName]
+    SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendPortName(
+        sqfliteEventDefault, localSendPort,
+        protocols: getMessagerProtocols(sqfliteEventDefault)));
+    return const RemoteServer();
   }
 
   @override
   FutureOr<bool> onClose() async {
-    if (sendPortOwner != null) {
-      final rcPort = ReceivePort();
-
-      send(KeyController(rcPort.sendPort, KeyType.closeServer, null));
-      sendPortOwner = null;
-
-      final timer = Timer(
-          const Duration(milliseconds: 10000),
-          () => Log.w('如果一直卡在这里，有可能是远程`throw`没有被捕获，建议使用`runZonedGuarded`',
-              onlyDebug: false));
-
-      final result = await rcPort.first;
-      timer.cancel();
-      dispose();
-      Log.i('close: $result', onlyDebug: false);
-    }
+    Log.e('此对象才是创建者，主隔离只是代理，没有权限关闭', onlyDebug: false);
     return super.onClose();
   }
 
-  SendPortOwner? sendPortOwner;
-
   @override
-  SendPort? get remoteSendPort => sendPortOwner?.localSendPort;
-
-  @override
-  SendPortOwner? getSendPortOwner(key) {
-    return sendPortOwner ?? super.getSendPortOwner(key);
-  }
+  SendPort? get remoteSendPort =>
+      getSendPortOwner(sqfliteEventDefault)?.localSendPort;
 
   /// messager
   @override
@@ -308,12 +275,5 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   @override
   FutureOr<void> sqfliteOnDowngrade(int oldVersion, int newVersion) {
     return _onDowngrade?.call(this, oldVersion, newVersion);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _state = false;
-    sendPortOwner = null;
   }
 }
