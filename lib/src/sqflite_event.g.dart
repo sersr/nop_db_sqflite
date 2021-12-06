@@ -27,55 +27,35 @@ abstract class SqfliteEventMessagerMain extends SqfliteEvent
     with SendEvent, SqfliteEventMessager {}
 
 mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
-  late final _sqfliteEventResolveFuncList = List<Function>.unmodifiable([
-    _sqfliteOpen_0,
-    _sqfliteQuery_1,
-    _sqfliteUpdate_2,
-    _sqfliteInsert_3,
-    _sqfliteDelete_4,
-    _sqfliteExecute_5,
-    _sqfliteOnCreate_6,
-    _sqfliteOnUpgrade_7,
-    _sqfliteOnDowngrade_8
-  ]);
   Iterable<MapEntry<String, Type>> getResolveProtocols() sync* {
     yield const MapEntry('sqfliteEventDefault', SqfliteEventMessage);
     yield* super.getResolveProtocols();
   }
 
-  bool onSqfliteEventResolve(message) => false;
-  @override
-  bool resolve(resolveMessage) {
-    if (resolveMessage is IsolateSendMessage) {
-      final type = resolveMessage.type;
-      if (type is SqfliteEventMessage) {
-        dynamic result;
-        try {
-          if (onSqfliteEventResolve(resolveMessage)) return true;
-          result = _sqfliteEventResolveFuncList
-              .elementAt(type.index)(resolveMessage.args);
-          receipt(result, resolveMessage);
-        } catch (e) {
-          receipt(result, resolveMessage, e);
-        }
-        return true;
-      }
-    }
-    return super.resolve(resolveMessage);
+  Iterable<MapEntry<Type, List<Function>>> resolveFunctionIterable() sync* {
+    yield MapEntry(SqfliteEventMessage, [
+      _sqfliteOpen_0,
+      _sqfliteQuery_1,
+      _sqfliteUpdate_2,
+      _sqfliteInsert_3,
+      _sqfliteDelete_4,
+      _sqfliteExecute_5,
+      _sqfliteOnCreate_6,
+      _sqfliteOnUpgrade_7,
+      _sqfliteOnDowngrade_8
+    ]);
+    yield* super.resolveFunctionIterable();
   }
 
-  FutureOr<void> _sqfliteOpen_0(args) => sqfliteOpen(args[0], args[1]);
-  FutureOr<List<Map<String, Object?>>?> _sqfliteQuery_1(args) =>
-      sqfliteQuery(args[0], args[1]);
-  Future<int?> _sqfliteUpdate_2(args) => sqfliteUpdate(args[0], args[1]);
-  Future<int?> _sqfliteInsert_3(args) => sqfliteInsert(args[0], args[1]);
-  Future<int?> _sqfliteDelete_4(args) => sqfliteDelete(args[0], args[1]);
-  FutureOr<void> _sqfliteExecute_5(args) => sqfliteExecute(args[0], args[1]);
-  FutureOr<void> _sqfliteOnCreate_6(args) => sqfliteOnCreate(args);
-  FutureOr<void> _sqfliteOnUpgrade_7(args) =>
-      sqfliteOnUpgrade(args[0], args[1]);
-  FutureOr<void> _sqfliteOnDowngrade_8(args) =>
-      sqfliteOnDowngrade(args[0], args[1]);
+  _sqfliteOpen_0(args) => sqfliteOpen(args[0], args[1]);
+  _sqfliteQuery_1(args) => sqfliteQuery(args[0], args[1]);
+  _sqfliteUpdate_2(args) => sqfliteUpdate(args[0], args[1]);
+  _sqfliteInsert_3(args) => sqfliteInsert(args[0], args[1]);
+  _sqfliteDelete_4(args) => sqfliteDelete(args[0], args[1]);
+  _sqfliteExecute_5(args) => sqfliteExecute(args[0], args[1]);
+  _sqfliteOnCreate_6(args) => sqfliteOnCreate(args);
+  _sqfliteOnUpgrade_7(args) => sqfliteOnUpgrade(args[0], args[1]);
+  _sqfliteOnDowngrade_8(args) => sqfliteOnDowngrade(args[0], args[1]);
 }
 
 /// implements [SqfliteEvent]
@@ -155,9 +135,4 @@ mixin MultiSqfliteEventDefaultMessagerMixin
 }
 
 abstract class MultiSqfliteEventDefaultResolveMain
-    with
-        SendEvent,
-        ListenMixin,
-        Resolve,
-        ResolveMultiRecievedMixin,
-        SqfliteEventResolve {}
+    with SendEvent, ListenMixin, Resolve, ResolveMultiRecievedMixin {}
