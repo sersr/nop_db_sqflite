@@ -205,7 +205,7 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendPortName(
         sqfliteEventDefault, localSendPort,
         protocols: getMessagerProtocols(sqfliteEventDefault)));
-    return const RemoteServer();
+    return RemoteServer();
   }
 
   @override
