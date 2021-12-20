@@ -14,10 +14,7 @@ enum SqfliteEventMessage {
   sqfliteUpdate,
   sqfliteInsert,
   sqfliteDelete,
-  sqfliteExecute,
-  sqfliteOnCreate,
-  sqfliteOnUpgrade,
-  sqfliteOnDowngrade
+  sqfliteExecute
 }
 
 abstract class SqfliteEventResolveMain extends SqfliteEvent
@@ -34,15 +31,12 @@ mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
 
   Iterable<MapEntry<Type, List<Function>>> resolveFunctionIterable() sync* {
     yield MapEntry(SqfliteEventMessage, [
-      (args) => sqfliteOpen(args[0], args[1]),
+      sqfliteOpen,
       (args) => sqfliteQuery(args[0], args[1]),
       (args) => sqfliteUpdate(args[0], args[1]),
       (args) => sqfliteInsert(args[0], args[1]),
       (args) => sqfliteDelete(args[0], args[1]),
-      (args) => sqfliteExecute(args[0], args[1]),
-      sqfliteOnCreate,
-      (args) => sqfliteOnUpgrade(args[0], args[1]),
-      (args) => sqfliteOnDowngrade(args[0], args[1])
+      (args) => sqfliteExecute(args[0], args[1])
     ]);
     yield* super.resolveFunctionIterable();
   }
@@ -56,8 +50,8 @@ mixin SqfliteEventMessager on SendEvent, SendMessage {
     yield* super.getProtocols();
   }
 
-  FutureOr<void> sqfliteOpen(String path, int version) {
-    return sendMessage(SqfliteEventMessage.sqfliteOpen, [path, version],
+  FutureOr<void> sqfliteOpen(String path) {
+    return sendMessage(SqfliteEventMessage.sqfliteOpen, path,
         isolateName: sqfliteEventDefault);
   }
 
@@ -84,23 +78,6 @@ mixin SqfliteEventMessager on SendEvent, SendMessage {
 
   FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) {
     return sendMessage(SqfliteEventMessage.sqfliteExecute, [sql, paramters],
-        isolateName: sqfliteEventDefault);
-  }
-
-  FutureOr<void> sqfliteOnCreate(int version) {
-    return sendMessage(SqfliteEventMessage.sqfliteOnCreate, version,
-        isolateName: sqfliteEventDefault);
-  }
-
-  FutureOr<void> sqfliteOnUpgrade(int oVersion, int nVersion) {
-    return sendMessage(
-        SqfliteEventMessage.sqfliteOnUpgrade, [oVersion, nVersion],
-        isolateName: sqfliteEventDefault);
-  }
-
-  FutureOr<void> sqfliteOnDowngrade(int oVersion, int nVersion) {
-    return sendMessage(
-        SqfliteEventMessage.sqfliteOnDowngrade, [oVersion, nVersion],
         isolateName: sqfliteEventDefault);
   }
 }

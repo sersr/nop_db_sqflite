@@ -43,8 +43,8 @@ class GenMyCache extends DatabaseTable<MyCache, GenMyCache> {
 
   @override
   String createTable() {
-    return 'CREATE TABLE $table ($id INTEGER PRIMARY KEY, $indexs INTEGER, '
-        '$name TEXT)';
+    return 'CREATE TABLE IF NOT EXISTS $table ($id INTEGER PRIMARY KEY, $indexs '
+        'INTEGER, $name TEXT)';
   }
 
   static MyCache mapToTable(Map<String, dynamic> map) => MyCache(
@@ -106,8 +106,8 @@ class GenIndexs extends DatabaseTable<Indexs, GenIndexs> {
 
   @override
   String createTable() {
-    return 'CREATE TABLE $table ($id INTEGER PRIMARY KEY, $indexs INTEGER, '
-        '$chapterName TEXT)';
+    return 'CREATE TABLE IF NOT EXISTS $table ($id INTEGER PRIMARY KEY, $indexs '
+        'INTEGER, $chapterName TEXT)';
   }
 
   static Indexs mapToTable(Map<String, dynamic> map) => Indexs(

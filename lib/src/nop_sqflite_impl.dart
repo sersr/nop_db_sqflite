@@ -10,7 +10,7 @@ import 'sqflite_main_isolate.dart';
 abstract class NopDatabaseSqflite extends NopDatabase {
   NopDatabaseSqflite(String path) : super(path);
   @override
-  void execute(String sql, [List<Object?> paramters = const []]) =>
+  Future<void> execute(String sql, [List<Object?> paramters = const []]) =>
       innerExecute(sql, paramters);
   @override
   FutureOr<List<Map<String, Object?>>> rawQuery(String sql,
@@ -50,7 +50,7 @@ abstract class NopDatabaseSqflite extends NopDatabase {
   }
 
   Future<void> open({
-    required DatabaseOnCreate onCreate,
+    required DatabaseOnCreate? onCreate,
     int version = 1,
     DatabaseUpgrade? onUpgrade,
     DatabaseUpgrade? onDowngrade,
@@ -75,45 +75,12 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
 
   @override
   Future<void> open({
-    required DatabaseOnCreate onCreate,
+    DatabaseOnCreate? onCreate,
     int version = 1,
     DatabaseUpgrade? onUpgrade,
     DatabaseUpgrade? onDowngrade,
-    // bool useFfi = true,
   }) async {
-    assert(version > 0);
-    FutureOr<void> _onCreate(Database db, int version) {
-      this.db = db;
-      return onCreate(this, version);
-    }
-
-    FutureOr<void> _onUpdate(Database db, int o, int n) {
-      this.db = db;
-      return onUpgrade?.call(this, o, n);
-    }
-
-    FutureOr<void> _onDown(Database db, int o, int n) {
-      this.db = db;
-      return onDowngrade?.call(this, o, n);
-    }
-
-    // '没有完整的生命周期，不能关闭Isolate
-    // if (useFfi) {
-    //   sqfliteFfiInit();
-    //   db = await databaseFactoryFfi.openDatabase(path,
-    //       options: OpenDatabaseOptions(
-    //         version: version,
-    //         onCreate: _onCreate,
-    //         onUpgrade: _onUpdate,
-    //         onDowngrade: _onDown,
-    //       ));
-    // } else {
-    db = await openDatabase(path,
-        version: version,
-        onCreate: _onCreate,
-        onUpgrade: _onUpdate,
-        onDowngrade: _onDown);
-    // }
+    db = await openDatabase(path);
   }
 
   @override
@@ -172,25 +139,50 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
         MultiSqfliteEventDefaultMessagerMixin {
   NopDatabaseSqfliteMain(String path) : super(path);
 
-  DatabaseOnCreate? _onCreate;
-  DatabaseUpgrade? _onUpgrade;
-  DatabaseUpgrade? _onDowngrade;
-
   @override
   Future<void> open({
-    required DatabaseOnCreate onCreate,
+    DatabaseOnCreate? onCreate,
     int version = 1,
     DatabaseUpgrade? onUpgrade,
     DatabaseUpgrade? onDowngrade,
   }) async {
-    _onCreate = onCreate;
-    _onUpgrade = onUpgrade;
-    _onDowngrade = onDowngrade;
     await init();
-    await sqfliteOpen(path, version);
-    _onCreate = null;
-    _onDowngrade = null;
-    _onUpgrade = null;
+    await sqfliteOpen(path);
+    final oldVersion = await getVersion();
+
+    Log.e('oldVersion: $oldVersion', onlyDebug: false);
+    if (oldVersion == 0) {
+      await onCreate!(this, version);
+      await setVersion(version);
+    } else {
+      try {
+        if (oldVersion < version) {
+          await setVersion(version);
+          await onUpgrade?.call(this, oldVersion, version);
+        } else if (oldVersion > version) {
+          await setVersion(version);
+          await onDowngrade?.call(this, oldVersion, version);
+        }
+      } catch (e) {
+        Log.e('sqflite 可能没有初始化完成?');
+      }
+    }
+  }
+
+  Future<int> getVersion() async {
+    var version = 0;
+    try {
+      final data = await rawQuery('PRAGMA user_version');
+      final value = data.first.values.first;
+      version = value as int? ?? 0;
+    } catch (e) {
+      Log.i('get version error!!');
+    }
+    return version;
+  }
+
+  Future<void> setVersion(int version) async {
+    return execute('PRAGMA user_version = $version');
   }
 
   // 本地(相对)调用
@@ -256,23 +248,5 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   NopPrepare prepare(String sql,
       {bool persistent = false, bool vtab = true, bool checkNoTail = false}) {
     throw UnimplementedError('暂未支持sqflite');
-  }
-
-  /// Resolve
-  @override
-  FutureOr<void> sqfliteOnCreate(int version) {
-    assert(_onCreate != null);
-    assert(Log.w('Resolve: onCreate'));
-    return _onCreate?.call(this, version);
-  }
-
-  @override
-  FutureOr<void> sqfliteOnUpgrade(int oldVersion, int newVersion) {
-    return _onUpgrade?.call(this, oldVersion, newVersion);
-  }
-
-  @override
-  FutureOr<void> sqfliteOnDowngrade(int oldVersion, int newVersion) {
-    return _onDowngrade?.call(this, oldVersion, newVersion);
   }
 }

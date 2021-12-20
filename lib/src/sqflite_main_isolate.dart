@@ -17,7 +17,6 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
         SendEventMixin,
         SendCacheMixin,
         SendInitCloseMixin,
-        SqfliteEventMessager,
         ResolveMultiRecievedMixin // 需要接收[SendPortName]
 {
   SqfliteMainIsolate();
@@ -89,22 +88,8 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   @override
   void onResume() {
     super.onResume();
-    remoteSendPort = getSendPortOwner(sqfliteEventDefault)?.localSendPort;
+    remoteSendPort = sendPortOwners.values.first.localSendPort;
     onResumeListen();
-  }
-
-  /// messager : 发送消息
-  FutureOr<void> _onCreate(NopDatabase db, int version) {
-    Log.w('messager: onCreate');
-    return sqfliteOnCreate(version);
-  }
-
-  FutureOr<void> _onUpgrade(NopDatabase db, int oldVersin, int newVersion) {
-    return sqfliteOnUpgrade(oldVersin, newVersion);
-  }
-
-  FutureOr<void> _onDowngrade(NopDatabase db, int oldVersion, int newVersion) {
-    return sqfliteOnDowngrade(oldVersion, newVersion);
   }
 
   /// ------------------ message end ----------------
@@ -137,18 +122,13 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   }
 
   @override
-  FutureOr<void> sqfliteOpen(String path, int version) async {
+  FutureOr<void> sqfliteOpen(String path) async {
     Log.e('main: open sqflite3', onlyDebug: false);
     assert(remoteSendPort != null);
     final oldDb = _db;
     _db = null;
     await oldDb?.disposeNop();
     _db = NopDatabaseSqfliteImpl(path);
-    return db!.open(
-      version: version,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-      onDowngrade: _onDowngrade,
-    );
+    return db!.open();
   }
 }
