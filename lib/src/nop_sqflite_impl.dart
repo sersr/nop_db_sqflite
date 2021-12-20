@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:isolate';
 
 import 'package:nop_db/nop_db.dart';
 import 'package:sqflite/sqflite.dart';
@@ -209,13 +208,13 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   }
 
   @override
-  FutureOr<bool> onClose() async {
+  FutureOr<void> onClose() async {
     Log.e('此对象才是创建者，主隔离只是代理，没有权限关闭', onlyDebug: false);
     return super.onClose();
   }
 
   @override
-  SendPort? get remoteSendPort =>
+  SendHandle? get remoteSendPort =>
       getSendPortOwner(sqfliteEventDefault)?.localSendPort;
 
   /// messager

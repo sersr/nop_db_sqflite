@@ -55,8 +55,11 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
 
   @override
   FutureOr<void> onInitStart() {
-    IsolateNameServer.removePortNameMapping(_sqfliteMainNopDb);
-    IsolateNameServer.registerPortWithName(localSendPort, _sqfliteMainNopDb);
+    final sendPort = localSendPort.sendPort;
+    if (sendPort is SendPort) {
+      IsolateNameServer.removePortNameMapping(_sqfliteMainNopDb);
+      IsolateNameServer.registerPortWithName(sendPort, _sqfliteMainNopDb);
+    }
     return super.onInitStart();
   }
 
@@ -66,7 +69,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   }
 
   @override
-  FutureOr<bool> onClose() async {
+  FutureOr<void> onClose() async {
     final old = db;
     _db = null;
     remoteSendPort = null;
@@ -77,7 +80,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   }
 
   @override
-  SendPort? remoteSendPort;
+  SendHandle? remoteSendPort;
 
   /// 从远程接收[SendPortName]
   /// [remoteSendPort]可用
