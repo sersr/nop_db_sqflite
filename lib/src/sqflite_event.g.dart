@@ -88,7 +88,7 @@ mixin MultiSqfliteEventDefaultMessagerMixin
   Iterable<MapEntry<String, CreateRemoteServer>>
       createRemoteServerIterable() sync* {
     yield MapEntry(
-        'sqfliteEventDefault', createRemoteServerSqfliteEventDefault);
+        'sqfliteEventDefault', Left(createRemoteServerSqfliteEventDefault));
     yield* super.createRemoteServerIterable();
   }
 }

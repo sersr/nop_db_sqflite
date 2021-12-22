@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:nop_db/nop_db.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:utils/utils.dart';
 
 import 'sqflite_event.dart';
@@ -80,7 +81,43 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
     DatabaseUpgrade? onUpgrade,
     DatabaseUpgrade? onDowngrade,
   }) async {
-    db = await openDatabase(path);
+    sqfliteFfiInit();
+    db = await databaseFactoryFfi.openDatabase(path);
+    final oldVersion = await getVersion();
+
+    Log.e('oldVersion: $oldVersion', onlyDebug: false);
+    if (oldVersion == 0) {
+      await onCreate!(this, version);
+      await setVersion(version);
+    } else {
+      try {
+        if (oldVersion < version) {
+          await setVersion(version);
+          await onUpgrade?.call(this, oldVersion, version);
+        } else if (oldVersion > version) {
+          await setVersion(version);
+          await onDowngrade?.call(this, oldVersion, version);
+        }
+      } catch (e) {
+        Log.e('sqflite 可能没有初始化完成?');
+      }
+    }
+  }
+
+  Future<int> getVersion() async {
+    var version = 0;
+    try {
+      final data = await rawQuery('PRAGMA user_version');
+      final value = data.first.values.first;
+      version = value as int? ?? 0;
+    } catch (e) {
+      Log.i('get version error!!');
+    }
+    return version;
+  }
+
+  Future<void> setVersion(int version) async {
+    return execute('PRAGMA user_version = $version');
   }
 
   @override
@@ -196,7 +233,7 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendPortName(
         sqfliteEventDefault, localSendPort,
         protocols: getMessagerProtocols(sqfliteEventDefault)));
-    return RemoteServer();
+    return LocalRemoteServer();
   }
 
   @override

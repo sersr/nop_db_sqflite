@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:nop_annotations/nop_annotations.dart';
 import 'package:nop_db/nop_db.dart';
 import 'package:nop_db_sqflite/nop_db_sqflite.dart';
 
@@ -62,8 +61,8 @@ class BookDatabase extends _GenBookDatabase {
   }
 
   Future<NopDatabase> _initSqfitedb() {
-    return NopDatabaseSqflite.openSqfite(path,
-        version: version, onCreate: onCreate);
+    final db = NopDatabaseSqfliteImpl(path);
+    return db.open(version: version, onCreate: onCreate).then((_) => db);
   }
 
   int get version => 1;

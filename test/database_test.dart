@@ -9,7 +9,6 @@ void main() async {
   db.test = true;
   await db.initDb();
 
-  db.watcher.sync = true;
   final genMyCacheTable = db.myCache;
   final indexsTable = db.indexs;
   test('database', () async {
@@ -86,7 +85,7 @@ void main() async {
       ..and.genMyCache_id.equalTo(100)
       ..having.count.genMyCache_id
       ..whereEnd.let((s) {
-        expect(s.updateItems.toString(), '{genMyCache.id}', reason: 'P: $s');
+        expect(s.updateItems.toString(), '{MyCache.id}', reason: 'P: $s');
         s
           ..where.coverWith([1, 'nihao', 2, 3])
           ..let((s) => print('cover|: $s'));
@@ -96,8 +95,8 @@ void main() async {
       ..let((s) {
         expect(
             s.toString(),
-            'sql: "SELECT COUNT(genMyCache.id), genMyCache.id FROM genMyCache", [] | '
-            'tables: [genMyCache] | updateItems: {genMyCache.id}');
+            'sql: "SELECT COUNT(MyCache.id), MyCache.id FROM MyCache", [] | '
+            'tables: [MyCache] | updateItems: {MyCache.id}');
 
         s.go;
       });
@@ -117,14 +116,14 @@ void main() async {
       });
 
     final using = genMyCacheTable.query.join(indexsTable)
-      ..select.genMyCache_id.as('genMyCacheId')
+      ..select.genMyCache_id.as('MyCacheId')
       ..let((exp) => exp.using.indexs.id);
 
     expect(
         using.joinEnd.toString(),
-        'sql: "SELECT genMyCache.id AS genMyCacheId FROM genMyCache INNER JOIN Indexs'
-        ' USING (indexs,id)", [] | tables: [genMyCache, Indexs] | updateItems: '
-        '{genMyCache.indexs, Indexs.indexs, genMyCache.id, Indexs.id}',
+        'sql: "SELECT MyCache.id AS MyCacheId FROM MyCache INNER JOIN Indexs'
+        ' USING (indexs,id)", [] | tables: [MyCache, Indexs] | updateItems: '
+        '{MyCache.indexs, Indexs.indexs, MyCache.id, Indexs.id}',
         reason: using.toString());
     dashed;
 
@@ -172,7 +171,7 @@ void main() async {
     if (tgo is Future<List<Map<String, Object?>>>) {
       dashed;
       dashed;
-      tgo.then((value) => print('\n\n:: $value'));
+      await tgo.then((value) => print('\n\n_________:: $value'));
       await Future.delayed(Duration.zero);
     } else {
       print('.........aaaaaaaaaa ....');

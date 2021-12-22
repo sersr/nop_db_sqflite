@@ -1,7 +1,6 @@
 import 'dart:async';
-
+import 'package:utils/utils.dart';
 import 'package:nop_db/nop_db.dart';
-
 part 'sqflite_event.g.dart';
 
 @NopIsolateEvent()
