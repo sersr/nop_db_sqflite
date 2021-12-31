@@ -24,30 +24,30 @@ abstract class SqfliteEventMessagerMain extends SqfliteEvent
     with SendEvent, SendMessage, SqfliteEventMessager {}
 
 mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
-  Iterable<MapEntry<String, Type>> getResolveProtocols() sync* {
-    yield const MapEntry('sqfliteEventDefault', SqfliteEventMessage);
-    yield* super.getResolveProtocols();
+  List<MapEntry<String, Type>> getResolveProtocols() {
+    return super.getResolveProtocols()
+      ..add(const MapEntry('sqfliteEventDefault', SqfliteEventMessage));
   }
 
-  Iterable<MapEntry<Type, List<Function>>> resolveFunctionIterable() sync* {
-    yield MapEntry(SqfliteEventMessage, [
-      sqfliteOpen,
-      (args) => sqfliteQuery(args[0], args[1]),
-      (args) => sqfliteUpdate(args[0], args[1]),
-      (args) => sqfliteInsert(args[0], args[1]),
-      (args) => sqfliteDelete(args[0], args[1]),
-      (args) => sqfliteExecute(args[0], args[1])
-    ]);
-    yield* super.resolveFunctionIterable();
+  List<MapEntry<Type, List<Function>>> resolveFunctionIterable() {
+    return super.resolveFunctionIterable()
+      ..add(MapEntry(SqfliteEventMessage, [
+        sqfliteOpen,
+        (args) => sqfliteQuery(args[0], args[1]),
+        (args) => sqfliteUpdate(args[0], args[1]),
+        (args) => sqfliteInsert(args[0], args[1]),
+        (args) => sqfliteDelete(args[0], args[1]),
+        (args) => sqfliteExecute(args[0], args[1])
+      ]));
   }
 }
 
 /// implements [SqfliteEvent]
 mixin SqfliteEventMessager on SendEvent, SendMessage {
   String get sqfliteEventDefault => 'sqfliteEventDefault';
-  Iterable<MapEntry<String, Type>> getProtocols() sync* {
-    yield MapEntry(sqfliteEventDefault, SqfliteEventMessage);
-    yield* super.getProtocols();
+  List<MapEntry<String, Type>> getProtocols() {
+    return super.getProtocols()
+      ..add(MapEntry(sqfliteEventDefault, SqfliteEventMessage));
   }
 
   FutureOr<void> sqfliteOpen(String path) {
@@ -85,11 +85,10 @@ mixin MultiSqfliteEventDefaultMessagerMixin
     on SendEvent, ListenMixin, SendMultiServerMixin /*impl*/ {
   Future<RemoteServer> createRemoteServerSqfliteEventDefault();
 
-  Iterable<MapEntry<String, CreateRemoteServer>>
-      createRemoteServerIterable() sync* {
-    yield MapEntry(
-        'sqfliteEventDefault', Left(createRemoteServerSqfliteEventDefault));
-    yield* super.createRemoteServerIterable();
+  List<MapEntry<String, CreateRemoteServer>> createRemoteServerIterable() {
+    return super.createRemoteServerIterable()
+      ..add(MapEntry(
+          'sqfliteEventDefault', Left(createRemoteServerSqfliteEventDefault)));
   }
 }
 
