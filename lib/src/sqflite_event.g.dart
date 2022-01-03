@@ -21,7 +21,7 @@ abstract class SqfliteEventResolveMain extends SqfliteEvent
     with ListenMixin, Resolve, SqfliteEventResolve {}
 
 abstract class SqfliteEventMessagerMain extends SqfliteEvent
-    with SendEvent, SendMessage, SqfliteEventMessager {}
+    with SendEvent, Messager, SqfliteEventMessager {}
 
 mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
   List<MapEntry<String, Type>> getResolveProtocols() {
@@ -43,7 +43,7 @@ mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
 }
 
 /// implements [SqfliteEvent]
-mixin SqfliteEventMessager on SendEvent, SendMessage {
+mixin SqfliteEventMessager on SendEvent, Messager {
   String get sqfliteEventDefault => 'sqfliteEventDefault';
   List<MapEntry<String, Type>> getProtocols() {
     return super.getProtocols()

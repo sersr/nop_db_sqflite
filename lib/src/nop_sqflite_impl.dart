@@ -230,8 +230,8 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   @override
   Future<RemoteServer> createRemoteServerSqfliteEventDefault() async {
     /// 主隔离端口已经开启了，只需向端口发送[SendPortName]
-    SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendPortName(
-        sqfliteEventDefault, localSendPort,
+    SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendHandleName(
+        sqfliteEventDefault, localSendHandle,
         protocols: getMessagerProtocols(sqfliteEventDefault)));
     return LocalRemoteServer();
   }
@@ -243,8 +243,8 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   }
 
   @override
-  SendHandle? get remoteSendPort =>
-      getSendPortOwner(sqfliteEventDefault)?.localSendPort;
+  SendHandle? get remoteSendHandle =>
+      getSendHandleOwner(sqfliteEventDefault)?.localSendHandle;
 
   /// messager
   @override

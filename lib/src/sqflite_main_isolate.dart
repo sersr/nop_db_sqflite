@@ -43,7 +43,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
 
   @override
   FutureOr<void> initTask() async {
-    if (_state || sendPortOwners.isNotEmpty) return;
+    if (_state || sendHandleOwners.isNotEmpty) return;
     _state = true;
     return run();
   }
@@ -54,7 +54,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
 
   @override
   FutureOr<void> onInitStart() {
-    final sendPort = localSendPort.sendPort;
+    final sendPort = localSendHandle.sendPort;
     if (sendPort is SendPort) {
       IsolateNameServer.removePortNameMapping(_sqfliteMainNopDb);
       IsolateNameServer.registerPortWithName(sendPort, _sqfliteMainNopDb);
@@ -71,7 +71,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   FutureOr<void> onClose() async {
     final old = db;
     _db = null;
-    remoteSendPort = null;
+    remoteSendHandle = null;
     _state = false;
     dispose();
     await old?.disposeNop();
@@ -79,16 +79,16 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   }
 
   @override
-  SendHandle? remoteSendPort;
+  SendHandle? remoteSendHandle;
 
-  /// 从远程接收[SendPortName]
-  /// [remoteSendPort]可用
-  /// 远程还在等待一个[SendPortName]
+  /// 从远程接收[SendHandleName]
+  /// [remoteSendHandle]可用
+  /// 远程还在等待一个[SendHandleName]
   /// 调用[onResumeListen]
   @override
   void onResume() {
     super.onResume();
-    remoteSendPort = sendPortOwners.values.first.localSendPort;
+    remoteSendHandle = sendHandleOwners.values.first.localSendHandle;
     onResumeListen();
   }
 
@@ -124,7 +124,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   @override
   FutureOr<void> sqfliteOpen(String path) async {
     Log.e('main: open sqflite3', onlyDebug: false);
-    assert(remoteSendPort != null);
+    assert(remoteSendHandle != null);
     final oldDb = _db;
     _db = null;
     await oldDb?.disposeNop();
