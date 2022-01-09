@@ -64,19 +64,19 @@ extension ItemExtensionMyCache<T extends ItemExtension<GenMyCache>> on T {
 
   T get name => item(table.name) as T;
 
-  T get genMyCache_id => id;
+  T get myCache_id => id;
 
-  T get genMyCache_indexs => indexs;
+  T get myCache_indexs => indexs;
 
-  T get genMyCache_name => name;
+  T get myCache_name => name;
 }
 
 extension JoinItemMyCache<J extends JoinItem<GenMyCache>> on J {
-  J get genMyCache_id => joinItem(joinTable.id) as J;
+  J get myCache_id => joinItem(joinTable.id) as J;
 
-  J get genMyCache_indexs => joinItem(joinTable.indexs) as J;
+  J get myCache_indexs => joinItem(joinTable.indexs) as J;
 
-  J get genMyCache_name => joinItem(joinTable.name) as J;
+  J get myCache_name => joinItem(joinTable.name) as J;
 }
 
 Map<String, dynamic> _Indexs_toJson(Indexs table) {
@@ -127,17 +127,17 @@ extension ItemExtensionIndexs<T extends ItemExtension<GenIndexs>> on T {
 
   T get chapterName => item(table.chapterName) as T;
 
-  T get genIndexs_id => id;
+  T get indexs_id => id;
 
-  T get genIndexs_indexs => indexs;
+  T get indexs_indexs => indexs;
 
-  T get genIndexs_chapterName => chapterName;
+  T get indexs_chapterName => chapterName;
 }
 
 extension JoinItemIndexs<J extends JoinItem<GenIndexs>> on J {
-  J get genIndexs_id => joinItem(joinTable.id) as J;
+  J get indexs_id => joinItem(joinTable.id) as J;
 
-  J get genIndexs_indexs => joinItem(joinTable.indexs) as J;
+  J get indexs_indexs => joinItem(joinTable.indexs) as J;
 
-  J get genIndexs_chapterName => joinItem(joinTable.chapterName) as J;
+  J get indexs_chapterName => joinItem(joinTable.chapterName) as J;
 }

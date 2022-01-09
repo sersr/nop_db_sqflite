@@ -3,7 +3,7 @@
 part of 'sqflite_event.dart';
 
 // **************************************************************************
-// Generator: IsolateEventGeneratorForAnnotation
+// Generator: ServerEventGeneratorForAnnotation
 // **************************************************************************
 
 // ignore_for_file: annotate_overrides
@@ -52,33 +52,33 @@ mixin SqfliteEventMessager on SendEvent, Messager {
 
   FutureOr<void> sqfliteOpen(String path) {
     return sendMessage(SqfliteEventMessage.sqfliteOpen, path,
-        isolateName: sqfliteEventDefault);
+        serverName: sqfliteEventDefault);
   }
 
   FutureOr<List<Map<String, Object?>>?> sqfliteQuery(
       String sql, List<Object?> parameters) {
     return sendMessage(SqfliteEventMessage.sqfliteQuery, [sql, parameters],
-        isolateName: sqfliteEventDefault);
+        serverName: sqfliteEventDefault);
   }
 
   Future<int?> sqfliteUpdate(String sql, List<Object?> paramters) {
     return sendMessage(SqfliteEventMessage.sqfliteUpdate, [sql, paramters],
-        isolateName: sqfliteEventDefault);
+        serverName: sqfliteEventDefault);
   }
 
   Future<int?> sqfliteInsert(String sql, List<Object?> paramters) {
     return sendMessage(SqfliteEventMessage.sqfliteInsert, [sql, paramters],
-        isolateName: sqfliteEventDefault);
+        serverName: sqfliteEventDefault);
   }
 
   Future<int?> sqfliteDelete(String sql, List<Object?> paramters) {
     return sendMessage(SqfliteEventMessage.sqfliteDelete, [sql, paramters],
-        isolateName: sqfliteEventDefault);
+        serverName: sqfliteEventDefault);
   }
 
   FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) {
     return sendMessage(SqfliteEventMessage.sqfliteExecute, [sql, paramters],
-        isolateName: sqfliteEventDefault);
+        serverName: sqfliteEventDefault);
   }
 }
 mixin MultiSqfliteEventDefaultMessagerMixin

@@ -45,7 +45,7 @@ void main() async {
         .go; // q // t
 
     final query = genMyCacheTable.query;
-    query.join(indexsTable)..on.genMyCache_name.eq.genIndexs_chapterName;
+    query.join(indexsTable)..on.myCache_name.eq.indexs_chapterName;
 
     print(query);
 
@@ -55,20 +55,20 @@ void main() async {
     final q = genMyCacheTable.query;
     q.join(indexsTable)
       ..select.count.all
-      ..using.genIndexs_indexs
-      ..where.genIndexs_id.greateThan(1)
-      ..orderBy.genIndexs_indexs
+      ..using.indexs_indexs
+      ..where.indexs_id.greateThan(1)
+      ..orderBy.indexs_indexs
       ..joinEnd.let((e) => print('e    |: $e'));
-    // q.order.orderBy.genMyCache_id;
+    // q.order.orderBy.myCache_id;
     // print('q: $q');
     dashed;
 
     print(q.go);
-    final qx = genMyCacheTable.query.genMyCache_name.join(indexsTable)
-      ..on.genIndexs_chapterName.like('index')
+    final qx = genMyCacheTable.query.myCache_name.join(indexsTable)
+      ..on.indexs_chapterName.like('index')
       ..out
-      ..where.genIndexs_indexs.lessThan(12)
-      ..or.genMyCache_indexs.lessThan(1);
+      ..where.indexs_indexs.lessThan(12)
+      ..or.myCache_indexs.lessThan(1);
 
     print(qx.joinEnd);
     final gl = qx.joinEnd.go;
@@ -78,12 +78,12 @@ void main() async {
     } else {
       print(gl);
     }
-    genMyCacheTable.query.genMyCache_id.where
-      ..genMyCache_id.lessThan(1000).and
-      ..priority.genMyCache_name.like('hello')
-      ..or.genMyCache_indexs.greateThan(1).out
-      ..and.genMyCache_id.equalTo(100)
-      ..having.count.genMyCache_id
+    genMyCacheTable.query.myCache_id.where
+      ..myCache_id.lessThan(1000).and
+      ..priority.myCache_name.like('hello')
+      ..or.myCache_indexs.greateThan(1).out
+      ..and.myCache_id.equalTo(100)
+      ..having.count.myCache_id
       ..whereEnd.let((s) {
         expect(s.updateItems.toString(), '{MyCache.id}', reason: 'P: $s');
         s
@@ -91,7 +91,7 @@ void main() async {
           ..let((s) => print('cover|: $s'));
       });
     genMyCacheTable.query
-      ..select.count.genMyCache_id.push.genMyCache_id.push
+      ..select.count.myCache_id.push.myCache_id.push
       ..let((s) {
         expect(
             s.toString(),
@@ -103,12 +103,12 @@ void main() async {
 
     genMyCacheTable.query.join(indexsTable)
       ..select.let((select) => select
-        ..count.genMyCache_id.push
-        ..count.genIndexs_chapterName.push
+        ..count.myCache_id.push
+        ..count.indexs_chapterName.push
         ..count.all.push)
-      ..where.genMyCache_indexs.eq.genMyCache_id
-      ..and.genIndexs_chapterName.like('hallal')
-      ..orderBy.genIndexs_indexs.asc
+      ..where.myCache_indexs.eq.myCache_id
+      ..and.indexs_chapterName.like('hallal')
+      ..orderBy.indexs_indexs.asc
       ..limit.withValue(2).offset(2)
       ..joinEnd.let((s) {
         print('x2   |: $s');
@@ -116,7 +116,7 @@ void main() async {
       });
 
     final using = genMyCacheTable.query.join(indexsTable)
-      ..select.genMyCache_id.as('MyCacheId')
+      ..select.myCache_id.as('MyCacheId')
       ..let((exp) => exp.using.indexs.id);
 
     expect(
@@ -138,8 +138,8 @@ void main() async {
     u.go;
     dashed;
     genMyCacheTable.query.join(indexsTable).where
-      ..genMyCache_name.lessThan(111)
-      ..or.genIndexs_chapterName.greateThan(1).back.joinEnd.let((s) {
+      ..myCache_name.lessThan(111)
+      ..or.indexs_chapterName.greateThan(1).back.joinEnd.let((s) {
         print('join: $s');
       });
 
@@ -151,19 +151,19 @@ void main() async {
         s.go;
       });
     indexsTable.query.indexs.where
-      ..genIndexs_id.lessThan(10)
-      ..and.genIndexs_chapterName.lessThan(1)
+      ..indexs_id.lessThan(10)
+      ..and.indexs_chapterName.lessThan(1)
       ..whereEnd.let((s) => print('x: $s'));
 
     final table2q = indexsTable.query.indexs.let((s) => s.where
-      ..genIndexs_id.lessThan(10)
-      ..and.genIndexs_chapterName.isNotNull
+      ..indexs_id.lessThan(10)
+      ..and.indexs_chapterName.isNotNull
       ..whereEnd.let((s) => print('table2q: $s')));
 
     final t = genMyCacheTable.query.let((s) {
       s.where
         ..indexs.in_.query(table2q).out
-        ..and.genMyCache_indexs.greateThanOrEqualTo(0);
+        ..and.myCache_indexs.greateThanOrEqualTo(0);
     });
 
     print(t);
@@ -180,7 +180,7 @@ void main() async {
     // expect(t.go.length, 2, reason: t.go.toString() + table2q.go.toString());
     dashed;
 
-    table2q.genIndexs_id.genIndexs_chapterName.go;
+    table2q.indexs_id.indexs_chapterName.go;
     // print(g.join('\n'));
     // expect(g.length, 8, reason: g.toString());
 
@@ -190,7 +190,7 @@ void main() async {
 
   test('is null', () {
     genMyCacheTable.query.all
-      ..where.genMyCache_id.is_.null_
+      ..where.myCache_id.is_.null_
       ..let((s) {
         print(s);
       });
