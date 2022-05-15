@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:nop_db/nop_db.dart';
+import 'package:nop/nop.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:utils/utils.dart';
 
 import 'sqflite_event.dart';
 import 'sqflite_main_isolate.dart';
@@ -163,17 +162,15 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
 /// 连接 main Isolate
 class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     with
-        SendEvent,
+        SqfliteEvent,
         ListenMixin,
-        Resolve,
-        SendEventResolve,
         SendEventMixin,
+        SendMultiServerMixin,
+        SqfliteEventMessager,
+        Resolve,
         SendCacheMixin,
         SendInitCloseMixin,
-        SqfliteEventResolve,
-        SqfliteEventMessager,
-        SendMultiServerMixin,
-        MultiSqfliteEventDefaultMessagerMixin {
+        SqfliteEventResolve {
   NopDatabaseSqfliteMain(String path) : super(path);
 
   @override
@@ -226,14 +223,30 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   @override
   FutureOr<void> disposeNop() => close();
 
-  /// 不使用[Resolve]的[onResumeListen]实现
+  // /// 不使用[Resolve]的[onResumeListen]实现
+  // @override
+  // Future<RemoteServer> createRemoteServerSqfliteEventDefault() async {
+  //   /// 主隔离端口已经开启了，只需向端口发送[SendPortName]
+  //   SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendHandleName(
+  //       sqfliteEventDefault, localSendHandle,
+  //       protocols: getMessagerProtocols(sqfliteEventDefault)));
+  //   return const NullRemoteServer();
+  // }
+
+  RemoteServer get sqfliteEventDefaultRemoteServer => const NullRemoteServer();
   @override
-  Future<RemoteServer> createRemoteServerSqfliteEventDefault() async {
+  Map<String, RemoteServer> regRemoteServer() {
+    return super.regRemoteServer()
+      ..['sqfliteEventDefault'] = sqfliteEventDefaultRemoteServer;
+  }
+
+  @override
+  void onResume() {
     /// 主隔离端口已经开启了，只需向端口发送[SendPortName]
     SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendHandleName(
         sqfliteEventDefault, localSendHandle,
         protocols: getMessagerProtocols(sqfliteEventDefault)));
-    return LocalRemoteServer();
+    super.onResume();
   }
 
   @override

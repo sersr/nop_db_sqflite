@@ -1,14 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:nop_db/nop_db.dart';
+import 'package:nop/nop.dart';
 import 'package:nop_db_sqflite/nop_db_sqflite.dart';
 
 part 'nop_db_test_impl.g.dart';
 
 class MyCache extends Table {
   MyCache({this.id, this.name, this.indexs});
-  @NopItem(primaryKey: true)
+  @NopDbItem(primaryKey: true)
   final int? id;
 
   final int? indexs;
@@ -20,7 +20,7 @@ class MyCache extends Table {
 
 class Indexs extends Table {
   Indexs({this.indexs, this.chapterName, this.id});
-  @NopItem(primaryKey: true)
+  @NopDbItem(primaryKey: true)
   final int? id;
 
   final int? indexs;
@@ -30,7 +30,7 @@ class Indexs extends Table {
   Map<String, dynamic> toJson() => _Indexs_toJson(this);
 }
 
-@Nop(tables: [MyCache, Indexs])
+@NopDb(tables: [MyCache, Indexs])
 class BookDatabase extends _GenBookDatabase {
   String path = NopDatabase.memory;
 

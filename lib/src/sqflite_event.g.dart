@@ -17,37 +17,55 @@ enum SqfliteEventMessage {
   sqfliteExecute
 }
 
-abstract class SqfliteEventResolveMain extends SqfliteEvent
-    with ListenMixin, Resolve, SqfliteEventResolve {}
+/// 主入口
+abstract class MultiSqfliteEventDefaultMessagerMain
+    with
+        SqfliteEvent,
+        ListenMixin,
+        SendEventMixin,
+        SendMultiServerMixin,
+        SqfliteEventMessager {
+  RemoteServer get sqfliteEventDefaultRemoteServer;
+  Map<String, RemoteServer> regRemoteServer() {
+    return super.regRemoteServer()
+      ..['sqfliteEventDefault'] = sqfliteEventDefaultRemoteServer;
+  }
+}
 
-abstract class SqfliteEventMessagerMain extends SqfliteEvent
-    with SendEvent, Messager, SqfliteEventMessager {}
+/// sqfliteEventDefault Server
+abstract class MultiSqfliteEventDefaultResolveMain
+    with ListenMixin, Resolve, SqfliteEventResolve {
+  MultiSqfliteEventDefaultResolveMain(
+      {required ServerConfigurations configurations})
+      : remoteSendHandle = configurations.sendHandle;
+  final SendHandle remoteSendHandle;
+}
 
 mixin SqfliteEventResolve on Resolve implements SqfliteEvent {
-  List<MapEntry<String, Type>> getResolveProtocols() {
+  Map<String, List<Type>> getResolveProtocols() {
     return super.getResolveProtocols()
-      ..add(const MapEntry('sqfliteEventDefault', SqfliteEventMessage));
+      ..putIfAbsent('sqfliteEventDefault', () => []).add(SqfliteEventMessage);
   }
 
-  List<MapEntry<Type, List<Function>>> resolveFunctionIterable() {
+  Map<Type, List<Function>> resolveFunctionIterable() {
     return super.resolveFunctionIterable()
-      ..add(MapEntry(SqfliteEventMessage, [
+      ..[SqfliteEventMessage] = [
         sqfliteOpen,
         (args) => sqfliteQuery(args[0], args[1]),
         (args) => sqfliteUpdate(args[0], args[1]),
         (args) => sqfliteInsert(args[0], args[1]),
         (args) => sqfliteDelete(args[0], args[1]),
         (args) => sqfliteExecute(args[0], args[1])
-      ]));
+      ];
   }
 }
 
 /// implements [SqfliteEvent]
 mixin SqfliteEventMessager on SendEvent, Messager {
   String get sqfliteEventDefault => 'sqfliteEventDefault';
-  List<MapEntry<String, Type>> getProtocols() {
+  Map<String, List<Type>> getProtocols() {
     return super.getProtocols()
-      ..add(MapEntry(sqfliteEventDefault, SqfliteEventMessage));
+      ..putIfAbsent(sqfliteEventDefault, () => []).add(SqfliteEventMessage);
   }
 
   FutureOr<void> sqfliteOpen(String path) {
@@ -81,16 +99,3 @@ mixin SqfliteEventMessager on SendEvent, Messager {
         serverName: sqfliteEventDefault);
   }
 }
-mixin MultiSqfliteEventDefaultMessagerMixin
-    on SendEvent, ListenMixin, SendMultiServerMixin /*impl*/ {
-  Future<RemoteServer> createRemoteServerSqfliteEventDefault();
-
-  List<MapEntry<String, CreateRemoteServer>> createRemoteServerIterable() {
-    return super.createRemoteServerIterable()
-      ..add(MapEntry(
-          'sqfliteEventDefault', Left(createRemoteServerSqfliteEventDefault)));
-  }
-}
-
-abstract class MultiSqfliteEventDefaultResolveMain
-    with SendEvent, ListenMixin, Resolve, ResolveMultiRecievedMixin {}

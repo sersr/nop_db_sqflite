@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:ui';
 
-import 'package:nop_db/nop_db.dart';
-import 'package:utils/utils.dart';
+import 'package:nop/nop.dart';
 
 import './nop_sqflite_impl.dart';
 import 'sqflite_event.dart';
@@ -11,13 +10,12 @@ import 'sqflite_event.dart';
 const _sqfliteMainNopDb = '_sqflite_main_nop_db';
 
 /// 由本地调用
-class SqfliteMainIsolate extends SqfliteEventResolveMain
+class SqfliteMainIsolate extends MultiSqfliteEventDefaultMessagerMain
     with
-        SendEvent,
-        SendEventMixin,
+        Resolve,
         SendCacheMixin,
         SendInitCloseMixin,
-        ResolveMultiRecievedMixin // 需要接收[SendPortName]
+        SqfliteEventResolve // 需要接收[SendPortName]
 {
   SqfliteMainIsolate();
 
@@ -36,7 +34,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
 
   /// 提供单一实例
   /// 只提供初始化接口
-  static Future<void> initMainDb() async => _privateInstance.init();
+  static Future<void> initMainDb() => _privateInstance.init();
 
   // 添加条件判定
   bool _state = false;
@@ -45,7 +43,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
   FutureOr<void> initTask() async {
     if (_state || sendHandleOwners.isNotEmpty) return;
     _state = true;
-    return run();
+    return super.initTask();
   }
 
   /// 权能转移到[onClose]
@@ -131,4 +129,7 @@ class SqfliteMainIsolate extends SqfliteEventResolveMain
     _db = NopDatabaseSqfliteImpl(path);
     return db!.open();
   }
+
+  @override
+  RemoteServer get sqfliteEventDefaultRemoteServer => const NullRemoteServer();
 }

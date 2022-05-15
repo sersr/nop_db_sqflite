@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'package:utils/utils.dart';
-import 'package:nop_db/nop_db.dart';
+import 'package:nop/nop.dart';
 part 'sqflite_event.g.dart';
 
 @NopServerEvent()
@@ -15,5 +14,4 @@ abstract class SqfliteEvent {
 
   Future<int?> sqfliteDelete(String sql, List<Object?> paramters);
   FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters);
-
 }
