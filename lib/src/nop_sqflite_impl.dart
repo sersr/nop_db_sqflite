@@ -85,17 +85,17 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
     final oldVersion = await getVersion();
 
     Log.e('oldVersion: $oldVersion', onlyDebug: false);
-    if (oldVersion == 0) {
-      await onCreate!(this, version);
+    if (oldVersion == 0 && onCreate != null) {
+      await onCreate(this, version);
       await setVersion(version);
     } else {
       try {
-        if (oldVersion < version) {
+        if (oldVersion < version && onUpgrade != null) {
           await setVersion(version);
-          await onUpgrade?.call(this, oldVersion, version);
-        } else if (oldVersion > version) {
+          await onUpgrade.call(this, oldVersion, version);
+        } else if (oldVersion > version && onDowngrade != null) {
           await setVersion(version);
-          await onDowngrade?.call(this, oldVersion, version);
+          await onDowngrade.call(this, oldVersion, version);
         }
       } catch (e) {
         Log.e('sqflite 可能没有初始化完成?');
@@ -159,18 +159,30 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
   }
 }
 
+class NopDatabaseSqfliteNative extends NopDatabaseSqfliteImpl {
+  NopDatabaseSqfliteNative(String path) : super(path);
+  @override
+  Future<void> open(
+      {DatabaseOnCreate? onCreate,
+      int version = 1,
+      DatabaseUpgrade? onUpgrade,
+      DatabaseUpgrade? onDowngrade}) async {
+    Log.e('native: sqlite3');
+    db = await openDatabase(path);
+  }
+}
+
 /// 连接 main Isolate
 class NopDatabaseSqfliteMain extends NopDatabaseSqflite
     with
         SqfliteEvent,
         ListenMixin,
         SendEventMixin,
+        Resolve,
         SendMultiServerMixin,
         SqfliteEventMessager,
-        Resolve,
         SendCacheMixin,
-        SendInitCloseMixin,
-        SqfliteEventResolve {
+        SendInitCloseMixin {
   NopDatabaseSqfliteMain(String path) : super(path);
 
   @override
@@ -223,41 +235,25 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   @override
   FutureOr<void> disposeNop() => close();
 
-  // /// 不使用[Resolve]的[onResumeListen]实现
-  // @override
-  // Future<RemoteServer> createRemoteServerSqfliteEventDefault() async {
-  //   /// 主隔离端口已经开启了，只需向端口发送[SendPortName]
-  //   SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendHandleName(
-  //       sqfliteEventDefault, localSendHandle,
-  //       protocols: getMessagerProtocols(sqfliteEventDefault)));
-  //   return const NullRemoteServer();
-  // }
-
-  RemoteServer get sqfliteEventDefaultRemoteServer => const NullRemoteServer();
   @override
   Map<String, RemoteServer> regRemoteServer() {
     return super.regRemoteServer()
-      ..['sqfliteEventDefault'] = sqfliteEventDefaultRemoteServer;
+      ..[sqfliteEventDefault] = const NullRemoteServer();
   }
 
   @override
-  void onResume() {
+  FutureOr<void> onInitStart() {
     /// 主隔离端口已经开启了，只需向端口发送[SendPortName]
     SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendHandleName(
         sqfliteEventDefault, localSendHandle,
         protocols: getMessagerProtocols(sqfliteEventDefault)));
-    super.onResume();
-  }
 
-  @override
-  FutureOr<void> onClose() async {
-    Log.e('此对象才是创建者，主隔离只是代理，没有权限关闭', onlyDebug: false);
-    return super.onClose();
+    return super.onInitStart();
   }
 
   @override
   SendHandle? get remoteSendHandle =>
-      getSendHandleOwner(sqfliteEventDefault)?.localSendHandle;
+      sendHandleOwners[sqfliteEventDefault]?.localSendHandle;
 
   /// messager
   @override

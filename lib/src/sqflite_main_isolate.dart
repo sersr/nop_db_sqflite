@@ -10,13 +10,15 @@ import 'sqflite_event.dart';
 const _sqfliteMainNopDb = '_sqflite_main_nop_db';
 
 /// 由本地调用
-class SqfliteMainIsolate extends MultiSqfliteEventDefaultMessagerMain
+class SqfliteMainIsolate
     with
-        Resolve,
+        SendEventMixin,
         SendCacheMixin,
         SendInitCloseMixin,
-        SqfliteEventResolve // 需要接收[SendPortName]
-{
+        ListenMixin,
+        Resolve,
+        SqfliteEventResolve,
+        ResolveMultiRecievedMixin {
   SqfliteMainIsolate();
 
   NopDatabaseSqfliteImpl? _db;
@@ -35,15 +37,16 @@ class SqfliteMainIsolate extends MultiSqfliteEventDefaultMessagerMain
   /// 提供单一实例
   /// 只提供初始化接口
   static Future<void> initMainDb() => _privateInstance.init();
+  static bool native = true;
 
   // 添加条件判定
   bool _state = false;
 
   @override
   FutureOr<void> initTask() async {
-    if (_state || sendHandleOwners.isNotEmpty) return;
+    if (_state) return;
     _state = true;
-    return super.initTask();
+    return run();
   }
 
   /// 权能转移到[onClose]
@@ -58,6 +61,18 @@ class SqfliteMainIsolate extends MultiSqfliteEventDefaultMessagerMain
       IsolateNameServer.registerPortWithName(sendPort, _sqfliteMainNopDb);
     }
     return super.onInitStart();
+  }
+
+  @override
+  bool onListenReceivedSendHandle(SendHandleName sendHandleName) {
+    if (receivedSendHandleOwners.keys.contains(sendHandleName.name)) {
+      return true;
+    }
+    final result = super.onListenReceivedSendHandle(sendHandleName);
+    remoteSendHandle = receivedSendHandleOwners.values.first.localSendHandle;
+    remoteSendHandle!.send(SendHandleName(sendHandleName.name, localSendHandle,
+        protocols: getResolveProtocols()[sendHandleName.name]));
+    return result;
   }
 
   @override
@@ -78,17 +93,6 @@ class SqfliteMainIsolate extends MultiSqfliteEventDefaultMessagerMain
 
   @override
   SendHandle? remoteSendHandle;
-
-  /// 从远程接收[SendHandleName]
-  /// [remoteSendHandle]可用
-  /// 远程还在等待一个[SendHandleName]
-  /// 调用[onResumeListen]
-  @override
-  void onResume() {
-    super.onResume();
-    remoteSendHandle = sendHandleOwners.values.first.localSendHandle;
-    onResumeListen();
-  }
 
   /// ------------------ message end ----------------
 
@@ -126,10 +130,8 @@ class SqfliteMainIsolate extends MultiSqfliteEventDefaultMessagerMain
     final oldDb = _db;
     _db = null;
     await oldDb?.disposeNop();
-    _db = NopDatabaseSqfliteImpl(path);
+    _db =
+        native ? NopDatabaseSqfliteNative(path) : NopDatabaseSqfliteImpl(path);
     return db!.open();
   }
-
-  @override
-  RemoteServer get sqfliteEventDefaultRemoteServer => const NullRemoteServer();
 }

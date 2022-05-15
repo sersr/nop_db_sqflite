@@ -17,6 +17,12 @@ dependencies:
   sqflite: ^2.0.1
   sqflite_common_ffi: ^2.1.0
 
+dependency_overrides:
+  nop:
+    path: ../nop
+  nop_gen:
+    path: ../nop_gen
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
