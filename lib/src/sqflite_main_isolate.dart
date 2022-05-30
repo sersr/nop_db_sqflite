@@ -19,15 +19,18 @@ class SqfliteMainIsolate
         Resolve,
         SqfliteEventResolve,
         ResolveMultiRecievedMixin {
-  SqfliteMainIsolate();
+  SqfliteMainIsolate({this.regName});
 
+  /// 如果需要多个实例，可以设置这个值
+  /// 使用[IsolateNameServer]实现
+  final String? regName;
   NopDatabaseSqfliteImpl? _db;
   NopDatabaseSqfliteImpl? get db => _db;
 
   /// 注册端口
   /// 远程隔离调用
-  static SendPort? get nopDatabaseSqfliteMainSendPort =>
-      IsolateNameServer.lookupPortByName(_sqfliteMainNopDb);
+  static SendPort? nopDatabaseSqfliteMainSendPort({String? name}) =>
+      IsolateNameServer.lookupPortByName(name ?? _sqfliteMainNopDb);
 
   static SqfliteMainIsolate? _instence;
   static SqfliteMainIsolate get _privateInstance {
@@ -38,7 +41,7 @@ class SqfliteMainIsolate
   /// 只提供初始化接口
   static Future<void> initMainDb() => _privateInstance.init();
   static bool native = true;
-
+  bool _native = true;
   // 添加条件判定
   bool _state = false;
 
@@ -46,6 +49,7 @@ class SqfliteMainIsolate
   FutureOr<void> initTask() async {
     if (_state) return;
     _state = true;
+    _native = native;
     return run();
   }
 
@@ -57,8 +61,9 @@ class SqfliteMainIsolate
   FutureOr<void> onInitStart() {
     final sendPort = localSendHandle.sendPort;
     if (sendPort is SendPort) {
-      IsolateNameServer.removePortNameMapping(_sqfliteMainNopDb);
-      IsolateNameServer.registerPortWithName(sendPort, _sqfliteMainNopDb);
+      final name = regName ?? _sqfliteMainNopDb;
+      IsolateNameServer.removePortNameMapping(name);
+      IsolateNameServer.registerPortWithName(sendPort, name);
     }
     return super.onInitStart();
   }
@@ -131,7 +136,7 @@ class SqfliteMainIsolate
     _db = null;
     await oldDb?.disposeNop();
     _db =
-        native ? NopDatabaseSqfliteNative(path) : NopDatabaseSqfliteImpl(path);
+        _native ? NopDatabaseSqfliteNative(path) : NopDatabaseSqfliteImpl(path);
     return db!.open();
   }
 }

@@ -183,8 +183,8 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
         SqfliteEventMessager,
         SendCacheMixin,
         SendInitCloseMixin {
-  NopDatabaseSqfliteMain(String path) : super(path);
-
+  NopDatabaseSqfliteMain(String path, {this.sendPortName}) : super(path);
+  final String? sendPortName;
   @override
   Future<void> open({
     DatabaseOnCreate? onCreate,
@@ -243,9 +243,9 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   @override
   FutureOr<void> onInitStart() {
     /// 主隔离端口已经开启了，只需向端口发送[SendPortName]
-    SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort!.send(SendHandleName(
-        sqfliteEventDefault, localSendHandle,
-        protocols: getMessagerProtocols(sqfliteEventDefault)));
+    SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort(name: sendPortName)!.send(
+        SendHandleName(sqfliteEventDefault, localSendHandle,
+            protocols: getMessagerProtocols(sqfliteEventDefault)));
 
     return super.onInitStart();
   }
