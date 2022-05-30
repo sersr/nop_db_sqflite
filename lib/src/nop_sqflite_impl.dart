@@ -238,7 +238,7 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   @override
   Map<String, RemoteServer> regRemoteServer() {
     return super.regRemoteServer()
-      ..[sqfliteEventDefault] = const NullRemoteServer();
+      ..[sqfliteEventDefault] = LocalBaseRemoteServer();
   }
 
   @override
