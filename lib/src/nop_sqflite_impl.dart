@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:nop/nop.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -27,8 +28,17 @@ abstract class NopDatabaseSqflite extends NopDatabase {
       innerInsert(sql, paramters);
 
   factory NopDatabaseSqflite.create({required String path}) {
-    // 使用端口与主隔离通信
-    return NopDatabaseSqfliteMain(path);
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+      case TargetPlatform.iOS:
+      case TargetPlatform.macOS:
+        return NopDatabaseSqfliteMain(path);
+      case TargetPlatform.linux:
+      case TargetPlatform.windows:
+        return NopDatabaseSqfliteImpl(path);
+      default:
+        throw UnsupportedError('不支持${defaultTargetPlatform.name}平台');
+    }
   }
 
   static Future<NopDatabase> openSqfite(
