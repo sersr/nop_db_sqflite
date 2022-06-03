@@ -242,10 +242,16 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
 
   @override
   FutureOr<void> onInitStart() {
+    final sendHandleName = SendHandleName(
+      sqfliteEventDefault,
+      localSendHandle,
+      protocols: getMessagerProtocols(sqfliteEventDefault),
+      isToRemote: true, // 当前 Isolate 为 local 方,所以是要发送给remote设为true
+    );
+
     /// 主隔离端口已经开启了，只需向端口发送[SendPortName]
-    SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort(name: sendPortName)!.send(
-        SendHandleName(sqfliteEventDefault, localSendHandle,
-            protocols: getMessagerProtocols(sqfliteEventDefault)));
+    SqfliteMainIsolate.nopDatabaseSqfliteMainSendPort(name: sendPortName)!
+        .send(sendHandleName);
 
     return super.onInitStart();
   }

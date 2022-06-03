@@ -76,7 +76,8 @@ class SqfliteMainIsolate
     final result = super.onListenReceivedSendHandle(sendHandleName);
     remoteSendHandle = receivedSendHandleOwners.values.first.localSendHandle;
     remoteSendHandle!.send(SendHandleName(sendHandleName.name, localSendHandle,
-        protocols: getResolveProtocols()[sendHandleName.name]));
+        protocols: getResolveProtocols()[sendHandleName.name],
+        isToRemote: false));
     return result;
   }
 
