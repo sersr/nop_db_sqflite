@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:nop/nop.dart';
+import 'package:nop_db/nop_db.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -11,21 +12,21 @@ import 'sqflite_main_isolate.dart';
 abstract class NopDatabaseSqflite extends NopDatabase {
   NopDatabaseSqflite(String path) : super(path);
   @override
-  Future<void> execute(String sql, [List<Object?> paramters = const []]) =>
-      innerExecute(sql, paramters);
+  Future<void> execute(String sql, [List<Object?> parameters = const []]) =>
+      innerExecute(sql, parameters);
   @override
   FutureOr<List<Map<String, Object?>>> rawQuery(String sql,
-          [List<Object?> paramters = const []]) =>
-      innerQuery(sql, paramters);
+          [List<Object?> parameters = const []]) =>
+      innerQuery(sql, parameters);
   @override
-  FutureOr<int> rawUpdate(String sql, [List<Object?> paramters = const []]) =>
-      innerUpdate(sql, paramters);
+  FutureOr<int> rawUpdate(String sql, [List<Object?> parameters = const []]) =>
+      innerUpdate(sql, parameters);
   @override
-  FutureOr<int> rawDelete(String sql, [List<Object?> paramters = const []]) =>
-      innerDelete(sql, paramters);
+  FutureOr<int> rawDelete(String sql, [List<Object?> parameters = const []]) =>
+      innerDelete(sql, parameters);
   @override
-  FutureOr<int> rawInsert(String sql, [List<Object?> paramters = const []]) =>
-      innerInsert(sql, paramters);
+  FutureOr<int> rawInsert(String sql, [List<Object?> parameters = const []]) =>
+      innerInsert(sql, parameters);
 
   factory NopDatabaseSqflite.create({required String path}) {
     switch (defaultTargetPlatform) {
@@ -69,13 +70,13 @@ abstract class NopDatabaseSqflite extends NopDatabase {
   Future<List<Map<String, Object?>>> innerQuery(String sql,
       [List<Object?> parameters = const []]);
 
-  Future<int> innerUpdate(String sql, [List<Object?> paramters = const []]);
+  Future<int> innerUpdate(String sql, [List<Object?> parameters = const []]);
 
-  Future<int> innerInsert(String sql, [List<Object?> paramters = const []]);
+  Future<int> innerInsert(String sql, [List<Object?> parameters = const []]);
 
-  Future<int> innerDelete(String sql, [List<Object?> paramters = const []]);
+  Future<int> innerDelete(String sql, [List<Object?> parameters = const []]);
 
-  Future<void> innerExecute(String sql, [List<Object?> paramters = const []]);
+  Future<void> innerExecute(String sql, [List<Object?> parameters = const []]);
 }
 
 class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
@@ -137,23 +138,23 @@ class NopDatabaseSqfliteImpl extends NopDatabaseSqflite {
   }
 
   @override
-  Future<int> innerUpdate(String sql, [List<Object?> paramters = const []]) {
-    return db.rawUpdate(sql, paramters);
+  Future<int> innerUpdate(String sql, [List<Object?> parameters = const []]) {
+    return db.rawUpdate(sql, parameters);
   }
 
   @override
-  Future<int> innerInsert(String sql, [List<Object?> paramters = const []]) {
-    return db.rawInsert(sql, paramters);
+  Future<int> innerInsert(String sql, [List<Object?> parameters = const []]) {
+    return db.rawInsert(sql, parameters);
   }
 
   @override
-  Future<int> innerDelete(String sql, [List<Object?> paramters = const []]) {
-    return db.rawDelete(sql, paramters);
+  Future<int> innerDelete(String sql, [List<Object?> parameters = const []]) {
+    return db.rawDelete(sql, parameters);
   }
 
   @override
-  Future<void> innerExecute(String sql, [List<Object?> paramters = const []]) {
-    return db.execute(sql, paramters);
+  Future<void> innerExecute(String sql, [List<Object?> parameters = const []]) {
+    return db.execute(sql, parameters);
   }
 
   @override
@@ -273,29 +274,29 @@ class NopDatabaseSqfliteMain extends NopDatabaseSqflite
   /// messager
   @override
   Future<int> innerDelete(String sql,
-      [List<Object?> paramters = const []]) async {
-    final d = await sqfliteDelete(sql, paramters);
+      [List<Object?> parameters = const []]) async {
+    final d = await sqfliteDelete(sql, parameters);
     return d ?? 0;
   }
 
   @override
   Future<int> innerInsert(String sql,
-      [List<Object?> paramters = const []]) async {
-    final i = await sqfliteInsert(sql, paramters);
+      [List<Object?> parameters = const []]) async {
+    final i = await sqfliteInsert(sql, parameters);
     return i ?? 0;
   }
 
   @override
   Future<int> innerUpdate(String sql,
-      [List<Object?> paramters = const []]) async {
-    final u = await sqfliteUpdate(sql, paramters);
+      [List<Object?> parameters = const []]) async {
+    final u = await sqfliteUpdate(sql, parameters);
     return u ?? 0;
   }
 
   @override
   Future<void> innerExecute(String sql,
-      [List<Object?> paramters = const []]) async {
-    return sqfliteExecute(sql, paramters);
+      [List<Object?> parameters = const []]) async {
+    return sqfliteExecute(sql, parameters);
   }
 
   @override

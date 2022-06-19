@@ -14,6 +14,9 @@ dependencies:
   nop:
     git:
       url: https://github.com/sersr/nop.git
+  nop_db:
+    git:
+      url: https://github.com/sersr/nop_db.git
   sqflite: ^2.0.1
   sqflite_common_ffi: ^2.1.0
 
@@ -22,6 +25,8 @@ dependency_overrides:
     path: ../nop
   nop_gen:
     path: ../nop_gen
+  nop_db:
+    path: ../nop_db
 
 dev_dependencies:
   flutter_test:

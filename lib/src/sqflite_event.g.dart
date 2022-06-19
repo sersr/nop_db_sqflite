@@ -79,23 +79,23 @@ mixin SqfliteEventMessager on SendEvent, Messager {
         serverName: sqfliteEventDefault);
   }
 
-  Future<int?> sqfliteUpdate(String sql, List<Object?> paramters) {
-    return sendMessage(SqfliteEventMessage.sqfliteUpdate, [sql, paramters],
+  Future<int?> sqfliteUpdate(String sql, List<Object?> parameters) {
+    return sendMessage(SqfliteEventMessage.sqfliteUpdate, [sql, parameters],
         serverName: sqfliteEventDefault);
   }
 
-  Future<int?> sqfliteInsert(String sql, List<Object?> paramters) {
-    return sendMessage(SqfliteEventMessage.sqfliteInsert, [sql, paramters],
+  Future<int?> sqfliteInsert(String sql, List<Object?> parameters) {
+    return sendMessage(SqfliteEventMessage.sqfliteInsert, [sql, parameters],
         serverName: sqfliteEventDefault);
   }
 
-  Future<int?> sqfliteDelete(String sql, List<Object?> paramters) {
-    return sendMessage(SqfliteEventMessage.sqfliteDelete, [sql, paramters],
+  Future<int?> sqfliteDelete(String sql, List<Object?> parameters) {
+    return sendMessage(SqfliteEventMessage.sqfliteDelete, [sql, parameters],
         serverName: sqfliteEventDefault);
   }
 
-  FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) {
-    return sendMessage(SqfliteEventMessage.sqfliteExecute, [sql, paramters],
+  FutureOr<void> sqfliteExecute(String sql, List<Object?> parameters) {
+    return sendMessage(SqfliteEventMessage.sqfliteExecute, [sql, parameters],
         serverName: sqfliteEventDefault);
   }
 }
