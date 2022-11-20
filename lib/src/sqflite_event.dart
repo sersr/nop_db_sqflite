@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:nop/nop.dart';
+import 'package:nop_annotations/nop_annotations.dart';
 part 'sqflite_event.g.dart';
 
 @NopServerEvent()
