@@ -104,18 +104,18 @@ class SqfliteMainIsolate
 
   /// resolve : 处理消息
   @override
-  Future<int?> sqfliteDelete(String sql, List<Object?> paramters) async {
-    return db?.innerDelete(sql, paramters);
+  Future<int?> sqfliteDelete(String sql, List<Object?> parameters) async {
+    return db?.innerDelete(sql, parameters);
   }
 
   @override
-  FutureOr<void> sqfliteExecute(String sql, List<Object?> paramters) async {
-    return db?.innerExecute(sql, paramters);
+  FutureOr<void> sqfliteExecute(String sql, List<Object?> parameters) async {
+    return db?.innerExecute(sql, parameters);
   }
 
   @override
-  Future<int?> sqfliteInsert(String sql, List<Object?> paramters) async {
-    return db?.innerInsert(sql, paramters);
+  Future<int?> sqfliteInsert(String sql, List<Object?> parameters) async {
+    return db?.innerInsert(sql, parameters);
   }
 
   @override
@@ -125,8 +125,8 @@ class SqfliteMainIsolate
   }
 
   @override
-  Future<int?> sqfliteUpdate(String sql, List<Object?> paramters) async {
-    return db?.innerUpdate(sql, paramters);
+  Future<int?> sqfliteUpdate(String sql, List<Object?> parameters) async {
+    return db?.innerUpdate(sql, parameters);
   }
 
   @override
