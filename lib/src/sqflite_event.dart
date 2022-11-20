@@ -16,3 +16,4 @@ abstract class SqfliteEvent {
 
   Future<int?> sqfliteDelete(String sql, List<Object?> parameters);
   FutureOr<void> sqfliteExecute(String sql, List<Object?> parameters);
+}
